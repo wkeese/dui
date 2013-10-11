@@ -9,7 +9,7 @@ define([
 	"dojo/_base/lang", // lang.hitch
 	"dojo/on",
 	"dojo/domReady",
-	"dojo/Stateful",
+	"./Stateful",
 	"dojo/_base/window", // win.body
 	"dojo/window", // winUtils.get
 	"./a11y"	// a11y.isTabNavigable
@@ -51,10 +51,10 @@ define([
 			// Don't leave curNode/prevNode pointing to bogus elements
 			var check = lang.hitch(this, function(node){
 				if(dom.isDescendant(this.curNode, node)){
-					this.set("curNode", null);
+					this.curNode = null;
 				}
 				if(dom.isDescendant(this.prevNode, node)){
-					this.set("prevNode", null);
+					this.prevNode = null;
 				}
 			});
 			aspect.before(domConstruct, "empty", check);
@@ -169,8 +169,8 @@ define([
 				clearTimeout(this._clearFocusTimer);
 			}
 			this._clearFocusTimer = setTimeout(lang.hitch(this, function(){
-				this.set("prevNode", this.curNode);
-				this.set("curNode", null);
+				this.prevNode = this.curNode;
+				this.curNode = null;
 			}), 0);
 
 			if(this._justMouseDowned){
@@ -224,7 +224,7 @@ define([
 						}
 						// otherwise, find the iframe this node refers to (can't access it via parentNode,
 						// need to do this trick instead). window.frameElement is supported in IE/FF/Webkit
-						node=winUtils.get(node.ownerDocument).frameElement;
+						node = winUtils.get(node.ownerDocument).frameElement;
 					}else{
 						// if this node is the root node of a widget, then add widget id to stack,
 						// except ignore clicks on disabled widgets (actually focusing a disabled widget still works,
@@ -266,8 +266,8 @@ define([
 			this._onTouchNode(node);
 
 			if(node == this.curNode){ return; }
-			this.set("prevNode", this.curNode);
-			this.set("curNode", node);
+			this.prevNode = this.curNode;
+			this.curNode = node;
 		},
 
 		_setStack: function(/*String[]*/ newStack, /*String*/ by){
@@ -285,7 +285,7 @@ define([
 				return;
 			}
 
-			this.set("activeStack", newStack);
+			this.activeStack = newStack;
 
 			var widget, i;
 

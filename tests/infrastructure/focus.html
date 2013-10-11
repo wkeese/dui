@@ -8,36 +8,64 @@
 
 		<script type="text/javascript">
 			require([
-				"doh/runner", "dojo/_base/array", "dcl/dcl", "dojo/dom", "dojo/on", "dojo/parser", "dojo/query",
-				"dui/focus",
+				"doh/runner", "dojo/dom", "dojo/on", "dojo/query",
+				"dui/focus", "dui/register",
 				"dui/_WidgetBase", "dui/_FocusMixin",
-				"dojo/domReady!",
-				"dui/form/DateTextBox", "dui/form/ComboBox", "dui/form/NumberSpinner","dui/form/ComboButton",
-				"dui/dijit/Menu", "dui/dijit/MenuItem", "dui/dijit/PopupMenuItem"
-			], function(doh, array, dcl, dom, on, parser, query, focus, _WidgetBase, _FocusMixin){
+				"dojo/domReady!"
+			], function(doh, dom, on, query, focus, register, _WidgetBase, _FocusMixin){
 
-				FakeEditor = dcl([_WidgetBase, _FocusMixin], {
+				Form = register("simple-form", [HTMLFormElement, _WidgetBase, _FocusMixin]);
+				FieldSet = register("simple-fieldset", [HTMLFieldSetElement, _WidgetBase, _FocusMixin]);
+				Input = register("simple-input", [HTMLInputElement, _WidgetBase, _FocusMixin]);
+				Button = register("simple-button", [HTMLInputElement, _WidgetBase, _FocusMixin]);
+				Combo = register("simple-combo", [HTMLElement, _WidgetBase, _FocusMixin], {
+					buildRendering: function(){
+						// extra the drop down list items
+						this.list = query("> *", this).orphan();
+
+						// generate the dom
+						this.appendChild(this.focusNode = document.createElement("input"));
+						this.appendChild(this.button = document.createElement("button"));
+						this.button.textContent = "v";
+					},
+					focus: function(){
+						this.focusNode.focus();
+					}
+				});
+				Spinner = register("simple-spinner", [HTMLElement, _WidgetBase, _FocusMixin], {
+					buildRendering: function(){
+						// generate the dom
+						this.appendChild(this.focusNode = document.createElement("input"));
+						this.appendChild(this.up = document.createElement("button"));
+						this.appendChild(this.down = document.createElement("button"));
+						this.up.textContent = "&uarr;";
+						this.down.textContent = "&darr;";
+					},
+					focus: function(){
+						this.focusNode.focus();
+					}
+				});
+				FakeEditor = register("fake-editor", [HTMLIFrameElement, _WidgetBase, _FocusMixin], {
 					buildRendering: function(){
 						// dui/focus gets confused if <body> gets focused, so need to add an extra <div> and focus that instead
-						this.domNode = this.containerNode = this.ownerDocument.createElement("iframe");
-						this.domNode.src = 'javascript:\"<html><body><div contenteditable=true>hello world</div></body></html>\"';
+						this.src = 'javascript:\"<html><body><div contenteditable=true>hello world</div></body></html>\"';
 					},
 
 					postCreate: function(){
-						focus.registerIframe(this.containerNode);
+						focus.registerIframe(this);
 					},
 
 					focus: function(){
-						this.containerNode.contentDocument.body.firstChild.focus();
+						this.contentDocument.body.firstChild.focus();
 					}
 				});
 
 				doh.register("setup", [
 					function parse(){
-						return parser.parse();
+						return register.parse();
 					},
 					function listeners(){
-						array.forEach(["form", "fieldset1", "fieldset2", "select", "editor", "spinner"], function(id){
+						["form", "fieldset1", "fieldset2", "select", "editor", "spinner"].forEach(function(id){
 							var w = dom.byId(id);
 
 							w.onFocus = function(){
@@ -395,44 +423,42 @@
 			});
 		</script>
 	</head>
-	<body style="background-color: #fff; color: black; padding: 0; margin: 0" class="claro">
+	<body style="background-color: #fff; color: black; padding: 0; margin: 0">
 	
 		<h3>dui/focus Automated Test</h3>
 
 		<label>a form ContentPane widget:</label><br>
 
-		<form id="form" data-dojo-type="dui/_WidgetBase" data-dojo-mixins="dui/_FocusMixin">
+		<form is="simple-form" id="form">
 			<label for="first">simple input: </label><input id="first"/><br>
 			<label for="second">another simple input: </label><input id="second"/><br>
 
 			<label>a fieldset ContentPane widget:</label><br>
-			<fieldset id=fieldset1 data-dojo-type="dui/_WidgetBase" data-dojo-mixins="dui/_FocusMixin">
-			<label for="select">a ComboBox widget:</label>
-				<select id=select data-dojo-type="dui/form/ComboBox">
-					<option>this</option>
-					<option>is</option>
-					<option>a</option>
-					<option>list</option>
-				</select>
+			<fieldset is="simple-fieldset" id=fieldset1>
+				<label for="select">a ComboBox widget:</label>
+				<simple-combo id=select>
+					<div>this</div>
+					<div>is</div>
+					<div>a</div>
+					<div>list</div>
+				</simple-combo>
 				<label for="plain">a plain input:</label>
 				<input id=plain value=plain/>
 			</fieldset>
-			<label>Editor:</label><br>
 
-			<div id=editor data-dojo-type="FakeEditor">
-			Hello world, this is an <i>editor</i>
-			</div>
+			<label>Editor:</label><br>
+			<iframe is="fake-editor" id=editor>
+				Hello world, this is an <i>editor</i>
+			</iframe>
+
 			<br>
 			<label>another fieldset ContentPane:</label><br>
-			<fieldset id=fieldset2 data-dojo-type="dui/_WidgetBase" data-dojo-mixins="dui/_FocusMixin">
-			<label for="date">a DateTextBox widget:</label>
-				<input id=date data-dojo-type="dui/form/DateTextBox"/><br>
-	
+			<fieldset is="simple-fieldset" id=fieldset2>
 				<label for="textarea">a plain textarea:</label><br>
 				<textarea id=textarea>hello there!</textarea><br>
 	
 				<label for="spinner">a Spinner widget:</label>
-				<input id=spinner data-dojo-type="dui/form/NumberSpinner" data-dojo-props='value:100'/><br>
+				<simple-spinner id=spinner value="100"></simple-spinner><br>
 	
 				<label>a Combobutton widget:</label>
 				<div id=button data-dojo-type="dui/form/ComboButton" data-dojo-props='tabIndex:"0"'>
