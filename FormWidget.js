@@ -40,13 +40,11 @@ define([
 		//		Apply aria-label in markup to the widget's focusNode
 		"aria-label": "focusNode",
 
-		/***
-		 TODO: commented out as it causes errors on FF
 		 // tabIndex: String
 		 //        Order fields are traversed when user hits the tab key
 		 tabIndex: "0",
-		 _setTabIndexAttr: "focusNode", // force copy even when tabIndex default value, needed since Button is <span>
-		 ***/
+		_setTabIndexAttr: "focusNode", // force copy even when tabIndex default value, needed since Button is <span>
+
 
 		// disabled: Boolean
 		//		Should this widget respond to user input?

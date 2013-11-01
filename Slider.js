@@ -308,7 +308,7 @@ define([
 				domClass.add(this.containerNode, toCSS(baseClass, "Bar") + " " + toCSS(baseClass, "RemainingBar"));
 				domClass.add(this.progressBar, toCSS(baseClass, "Bar") + " " + toCSS(baseClass, "ProgressBar"));
 				if (this.isRange) {
-					this._setTabIndexAttr = ["handleMin", "handle"];
+					this._setTabIndexAttr = ["handleMin", "handle"];	// todo: useless
 					domClass.add(this.handleMin, toCSS(baseClass, "Handle") + " " + toCSS(baseClass, "HandleMin"));
 				} else {
 					this.progressBar.removeChild(this.handleMin);
