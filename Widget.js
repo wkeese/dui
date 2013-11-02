@@ -342,6 +342,7 @@ define([
 					/* jshint evil:true */
 					props[name] = lang.getObject(value, false) || new Function(value);
 				}
+				delete widget[name];
 			}
 
 			while ((attr = this.attributes[idx++])) {
