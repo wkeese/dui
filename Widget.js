@@ -343,6 +343,7 @@ define([
 					props[name] = lang.getObject(value, false) || new Function(value);
 				}
 				delete widget[name];
+				widget.removeAttribute(name.toLowerCase());
 			}
 
 			while ((attr = this.attributes[idx++])) {
