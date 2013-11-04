@@ -63,6 +63,11 @@ require([
 	var touchEvent = null;
 	var touchTarget = null;
 
+	// For testing that tabIndex can be set programatically, and
+	// also that root node doesn't get tab index set too (only handle should be set)
+	customH.tabIndex = "5";
+
+
 	function getZoom(widget) {
 		var bodyZoom = domStyle.get(win.body(), "zoom") || 1;
 		var nodeZoom = (has("ie") ? parseFloat(domStyle.get(widget).getPropertyValue("zoom")) / 100 : domStyle.get(widget, "zoom")) || 1;
