@@ -314,9 +314,9 @@ define([
 					var self = this;
 					// begin watching for changes to the tabindex DOM attribute
 					if ("WebKitMutationObserver" in window) {
-						var observer = new WebKitMutationObserver(function (mutations) {
+						var observer = new WebKitMutationObserver(function () {
 							var newValue = self.getAttribute("tabindex");
-							if (newValue !== desc.get.call(self, "tabIndex") && newValue !== null) {
+							if (newValue !== null) {
 								self.removeAttribute("tabindex");
 								desc.set.call(self, newValue);
 							}
