@@ -302,34 +302,7 @@ define([
 			//		https://bugs.webkit.org/show_bug.cgi?id=36423
 			//		https://bugs.webkit.org/show_bug.cgi?id=49739
 			//		https://bugs.webkit.org/show_bug.cgi?id=75297
-			var tabIndex = this.tabIndex;
-			// Trace up prototype chain looking for custom setter
-			for (var proto = this; proto; proto = Object.getPrototypeOf(proto)) {
-				var desc = Object.getOwnPropertyDescriptor(proto, "tabIndex");
-				if (desc && desc.set) {
-					if (this.hasAttribute("tabindex")) { // initial value was specified
-						this.removeAttribute("tabindex");
-						desc.set.call(this, tabIndex); // call custom setter
-					}
-					var self = this;
-					// begin watching for changes to the tabindex DOM attribute
-					if ("WebKitMutationObserver" in window) {
-						var observer = new WebKitMutationObserver(function () {
-							var newValue = self.getAttribute("tabindex");
-							if (newValue !== null) {
-								self.removeAttribute("tabindex");
-								desc.set.call(self, newValue);
-							}
-						});
-						observer.observe(this, {
-							subtree: false,
-							attributeFilter: ['tabindex'],
-							attributes: true
-						});
-					}
-					break;
-				}
-			}
+
 		},
 
 		/**
@@ -448,6 +421,33 @@ define([
 			//		node dimensions or placement.
 			// tags:
 			//		protected
+
+
+			// Safari has a tabIndex property on the instance that cannot be deleted or redefined.
+			// So for Safari and Chrome, setup listener for when that property is changed, and call the
+			// custom setter in the prototype.
+			if ("WebKitMutationObserver" in window) {
+				for (var proto = this; proto; proto = Object.getPrototypeOf(proto)) {
+					var desc = Object.getOwnPropertyDescriptor(proto, "tabIndex");
+					if (desc && desc.set) {
+						var self = this;
+						// begin watching for changes to the tabindex DOM attribute
+						var observer = new WebKitMutationObserver(function () {
+							var newValue = self.getAttribute("tabindex");
+							if (newValue !== null) {
+								self.removeAttribute("tabindex");
+								desc.set.call(self, newValue);
+							}
+						});
+						observer.observe(this, {
+							subtree: false,
+							attributeFilter: ['tabindex'],
+							attributes: true
+						});
+						break;
+					}
+				}
+			}
 		},
 
 		startup: function () {
