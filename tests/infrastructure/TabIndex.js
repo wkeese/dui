@@ -9,7 +9,7 @@ define(["intern!object",
 		"setup": function () {
 			return this.remote
 				.get(require.toUrl("./TabIndex.html"))
-				.waitForCondition("ready", 5000)
+				.waitForCondition("ready", 10000)
 				.end();
 		},
 
