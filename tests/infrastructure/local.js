@@ -30,7 +30,6 @@ define({
 	// OnDemand. Options that will be permutated are browserName, version, platform, and platformVersion; any other
 	// capabilities options specified for an environment will be copied as-is
 	environments: [
-		{ browserName: "firefox" },
 		{ browserName: "safari" }
 	],
 
@@ -51,12 +50,10 @@ define({
 	// Configuration options for the module loader; any AMD configuration options supported by the Dojo loader can be
 	// used here
 	loader: {
-		// Packages that should be registered with the loader in each testing environment
-//		packages: [ { name: "myPackage", location: "." } ]
 	},
 
 	// Non-functional test suite(s) to run in each browser
-	suites: [ "dui/tests/infrastructure/unit" ],
+	suites: [  ],
 
 	// Functional test suite(s) to run in each browser once non-functional tests are completed
 	functionalSuites: [ "dui/tests/infrastructure/functional" ],
