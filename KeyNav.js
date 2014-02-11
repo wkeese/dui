@@ -42,12 +42,6 @@ define([
 		_keyNavCodes: {},
 		=====*/
 
-		// tabIndex: String
-		//		Tab index of the container; same as HTML tabIndex attribute.
-		//		Note then when user tabs into the container, focus is immediately
-		//		moved to the first item in the container.
-		tabIndex: "0",
-
 		// childSelector: [protected abstract] Function||String
 		//		Selector (passed to on.selector()) to identify what to treat as a navigable descendant. Used to monitor
 		//		focus events and set this.focusedChild.   Must be set by implementing class.  If this is a string
@@ -55,9 +49,6 @@ define([
 		childSelector: null,
 
 		postCreate: function () {
-			// Set tabIndex on root node
-			domAttr.set(this, "tabIndex", this.tabIndex);
-
 			if (!this._keyNavCodes) {
 				var keyCodes = this._keyNavCodes = {};
 				keyCodes[keys.HOME] = lang.hitch(this, "focusFirstChild");
@@ -81,6 +72,12 @@ define([
 					self._onChildFocus(this, evt);
 				})
 			);
+		},
+
+		enteredViewCallback: function () {
+			if (!this.hasAttribute("tabindex")){
+				this.tabIndex = "0";
+			}
 		},
 
 		_onLeftArrow: function () {

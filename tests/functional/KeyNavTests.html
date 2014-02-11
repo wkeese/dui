@@ -17,15 +17,6 @@
 		"dojo/domReady!"
 	], function(register, dom, Widget, Container, KeyNav){
 		var TestContainer = register("test-container", [HTMLElement, Widget, Container, KeyNav], {
-			buildRendering: function () {
-				this.style.display = "block";
-			},
-			enteredViewCallback: function () {
-				// TODO: THIS IS A WORKAROUND FOR https://github.com/ibm-js/delite/issues/62
-				// Remove it when the issue is fixed.
-				this._enteredView = true;
-				this.tabIndex = "0";
-			},
 			childSelector: function (child) {
 				return child !== this;
 			},
@@ -55,16 +46,52 @@
 			}
 		});
 
+		// Test declarative creation
 		register.parse();
+
+		// And also test programmatic creation
+		var p1 = new TestContainer({
+			"aria-labelledby": "testContainer3Label"
+		}).placeAt("testContainer3Label", "after");
+		["six", "seven", "eight"].forEach(function (label) {
+			var div = document.createElement("div");
+			div.textContent = label;
+			p1.appendChild(div);
+		});
+		p1.startup();
+
+		var p2 = new TestContainer({
+			id: "testContainer4",
+			"aria-labelledby": "testContainer4Label",
+			tabIndex: "5"
+		}).placeAt("thirdInput", "after");
+		["twelve", "thirteen", "fourteen"].forEach(function (label) {
+			var div = document.createElement("div");
+			div.textContent = label;
+			p2.appendChild(div);
+		});
+		p2.startup();
 
 		// Set global variable to signal that the test page is ready
 		ready = true;
 	})
 </script>
+<style>
+	test-container {
+		display: block;
+		border: gray dotted medium;
+	}
+	test-container > * {
+		margin: 3px;
+		border: solid #ccc;
+	}
+</style>
 </head>
 <body>
-	<input id="autofocusInput" type="text" autofocus="autofocus">
-	<test-container id="testContainer">
+	<h1>KeyNav functional test</h1>
+	<h3 id="testContainerLabel">Declarative KeyNav with no tabindex setting:</h3>
+	<input id="autofocusInput" type="text" autofocus="autofocus"=>
+	<test-container id="testContainer" aria-labelledby="testContainerLabel">
 		<!-- widget children -->
 		<test-contained id="one">one</test-contained>
 		<test-contained id="two">two</test-contained>
@@ -74,7 +101,25 @@
 		<div id="four">four</div>
 		<div id="five">five</div>
 	</test-container>
-	<test-container id="emptyContainer" style="height: 40px; background-color: red;">
+
+	<h3 id="testContainer3Label">Programmatic KeyNav with no tabindex setting:</h3>
+
+	<h3 id="testContainer2Label">Declarative KeyNav with tabindex=3 setting:</h3>
+	<input id="secondInput" type="text" tabindex=2 value="tabindex=2"><br>
+	<test-container id="testContainer2" tabindex=3 aria-labelledby="testContainer2Label">
+		<div>nine</div>
+		<div>ten</div>
+		<div>eleven</div>
+	</test-container>
+
+	<h3 id="testContainer4Label">Programmatic KeyNav with tabindex=5 setting:</h3>
+	<input id="thirdInput" type="text" tabindex=4 value="tabindex=4">
+	<button type="button" tabindex=6 onclick="testContainer4.tabIndex=7;">
+		change previous container tabindex to 7
+	</button>
+
+	<h3>Empty KeyNav container tabindex=7</h3>
+	<test-container id="emptyContainer" style="height: 40px;" tabindex="7">
 	</test-container>
 </body>
 </html>
