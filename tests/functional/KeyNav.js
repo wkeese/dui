@@ -17,30 +17,30 @@ define(["intern!object",
 				// SafariDriver doesn't support tabbing, see https://code.google.com/p/selenium/issues/detail?id=5403
 				return;
 			}
-			return this.remote.execute("return document.activeElement.id")
+			return this.remote.execute("return document.activeElement.value")
 					.then(function (value) {
-						assert.equal(value, "autofocusInput", "initial element");
+						assert.equal(value, "auto focus", "initial element");
 					})
 				.keys("\uE004") // tab
-				.execute("return document.activeElement.id")
+				.execute("return document.activeElement.textContent")
 					.then(function (value) {
-						assert.equal(value, "one", "tabbed to one");
+						assert.equal(value, "apple", "tabbed to apple");
 					})
 				.keys("\uE008\uE004") // shift tab
-				.execute("return document.activeElement.id")
+				.execute("return document.activeElement.value")
 					.then(function (value) {
-						assert.equal(value, "autofocusInput", "shift tabbed back to autofocusInput");
+						assert.equal(value, "auto focus", "shift tabbed back to initial element");
 					})
 				.keys("\uE008") // release shift
 				.keys("\uE004") // tab
-				.execute("return document.activeElement.id")
+				.execute("return document.activeElement.textContent")
 					.then(function (value) {
-						assert.equal(value, "one", "tabbed to one again");
+						assert.equal(value, "apple", "tabbed to apple again");
 					})
 				.keys("\uE004") // tab
 				.execute("return document.activeElement.textContent")
 				.then(function (value) {
-					assert.equal(value, "six", "tabbed to first element on programmatic KeyNav w/implicit tabIndex");
+					assert.equal(value, "one", "tabbed to first element on programmatic KeyNav w/implicit tabIndex");
 				})
 				.execute("secondInput.focus()")// don't tab from previous KeyNav, it goes to address bar [on chrome]
 				.execute("return document.activeElement.value")
@@ -50,92 +50,109 @@ define(["intern!object",
 				.keys("\uE004") // tab
 				.execute("return document.activeElement.textContent")
 				.then(function (value) {
-					assert.equal(value, "nine", "tabbed to declarative KeyNav with tabindex=3 setting");
+					assert.equal(value, "four", "tabbed to declarative KeyNav with tabindex=3 setting");
 				})
 				.keys("\uE004") // tab
 				.keys("\uE004") // tab
 				.execute("return document.activeElement.textContent")
 				.then(function (value) {
-					assert.equal(value, "twelve", "tabbed past INPUT to programmatic KeyNav with tabindex=5 setting");
+					assert.equal(value, "seven", "tabbed past INPUT to programmatic KeyNav with tabindex=5 setting");
 				})
 				.keys("\uE004") // tab
 				.keys(" ") // click the button, changing previous KeyNav to tabindex=7
 				.keys("\uE004") // tab
 				.execute("return document.activeElement.textContent")
 				.then(function (value) {
-					assert.equal(value, "twelve", "dynamic tabindex change worked");
+					assert.equal(value, "seven", "dynamic tabindex change worked");
 				})
 
 		},
-		"intra widget arrow navigation": function () {
+		"arrow navigation": function () {
 			if (/safari|iPhone/.test(this.remote.environmentType.browserName)) {
 				// SafariDriver doesn't support tabbing, see https://code.google.com/p/selenium/issues/detail?id=5403
 				return;
-		}
+			}
 			return this.remote.execute("autofocusInput.focus();")
-				.execute("return document.activeElement.id")
+				.execute("return document.activeElement.value")
 					.then(function (value) {
-						assert.equal(value, "autofocusInput", "start on autofocusInput");
+						assert.equal(value, "auto focus", "start on auto focus");
 					})
 				.keys("\uE004") // tab
-				.execute("return document.activeElement.id")
+				.execute("return document.activeElement.textContent")
 					.then(function (value) {
-						assert.equal(value, "one", "tabbed to one");
+						assert.equal(value, "apple", "tab");
 					})
 				.keys("\uE015") // arrow down
-				.execute("return document.activeElement.id")
+				.execute("return document.activeElement.textContent")
 					.then(function (value) {
-						assert.equal(value, "two", "arrowed to two");
+						assert.equal(value, "pear", "down");
 					})
-				.keys("\uE015") // arrow down
-				.execute("return document.activeElement.id")
-					.then(function (value) {
-						assert.equal(value, "three", "arrowed to three");
-					})
-				.keys("\uE015") // arrow down
-				.execute("return document.activeElement.id")
-					.then(function (value) {
-						assert.equal(value, "four", "arrowed to four");
-					})
-				.keys("\uE015") // arrow down
-				.execute("return document.activeElement.id")
-					.then(function (value) {
-						assert.equal(value, "five", "arrowed to five");
-					})
-				.keys("\uE015") // arrow down
-				.execute("return document.activeElement.id")
-					.then(function (value) {
-						assert.equal(value, "five", "still on five");
-					})
+				.keys("\uE014") // arrow right
+				.execute("return document.activeElement.textContent")
+				.then(function (value) {
+					assert.equal(value, "grapes", "right");
+				})
+				.keys("\uE012") // arrow left
+				.execute("return document.activeElement.textContent")
+				.then(function (value) {
+					assert.equal(value, "pear", "left");
+				})
 				.keys("\uE013") // arrow up
-				.execute("return document.activeElement.id")
+				.execute("return document.activeElement.textContent")
+				.then(function (value) {
+					assert.equal(value, "apple", "up");
+				})
+				.keys("\uE010") // end
+				.execute("return document.activeElement.textContent")
 					.then(function (value) {
-						assert.equal(value, "four", "back to four");
+						assert.equal(value, "raspberry", "end");
 					})
-				.keys("\uE013") // arrow up
-				.execute("return document.activeElement.id")
+				.keys("\uE011") // home
+				.execute("return document.activeElement.textContent")
 					.then(function (value) {
-						assert.equal(value, "three", "back to three");
-					})
-				.keys("\uE013") // arrow up
-				.execute("return document.activeElement.id")
-					.then(function (value) {
-						assert.equal("two", value, "back to two");
-					})
-				.keys("\uE013") // arrow up
-				.execute("return document.activeElement.id")
-					.then(function (value) {
-						assert.equal("one", value, "back to one");
-					})
-				.keys("\uE013") // arrow up
-				.execute("return document.activeElement.id")
-					.then(function (value) {
-						assert.equal("one", value, "still on one");
+						assert.equal(value, "apple", "home");
 					});
+		},
 
-				// TODO:  test home/end
+		"letter search": function () {
+			if (/safari|iPhone/.test(this.remote.environmentType.browserName)) {
+				// SafariDriver doesn't support tabbing, see https://code.google.com/p/selenium/issues/detail?id=5403
+				return;
+			}
+			return this.remote.execute("autofocusInput.focus();")
+				.execute("return document.activeElement.value")
+				.then(function (value) {
+					assert.equal(value, "auto focus", "start on auto focus");
+				})
+				.keys("\uE004") // tab
+				.execute("return document.activeElement.textContent")
+				.then(function (value) {
+					assert.equal(value, "apple", "tab");
+				})
+				.keys("b") // search for word starting with b
+				.execute("return document.activeElement.textContent")
+				.then(function (value) {
+					assert.equal(value, "banana", "b");
+				})
+				.wait(1000)		// clear timer so next keystroke taken as new search rather than continuation
+				.keys("b") // search for next word starting with b
+				.execute("return document.activeElement.textContent")
+				.then(function (value) {
+					assert.equal(value, "blueberry", "b again");
+				})
+				.wait(1000)		// clear timer so next keystroke taken as new search rather than continuation
+				.keys("r") // search for word starting with r
+				.execute("return document.activeElement.textContent")
+				.then(function (value) {
+					assert.equal(value, "raspberry", "right");
+				})
+				.wait(1000)		// clear timer so next keystroke taken as new search rather than continuation
+				.keys("bl") // search for word starting with bl
+				.execute("return document.activeElement.textContent")
+				.then(function (value) {
+					assert.equal(value, "blueberry", "bl");
+				});
 		}
 
-		// TODO: test letter search
 	});
 });
