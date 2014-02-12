@@ -58,13 +58,6 @@ define(["intern!object",
 				.then(function (value) {
 					assert.equal(value, "seven", "tabbed past INPUT to programmatic KeyNav with tabindex=5 setting");
 				})
-				.keys("\uE004") // tab
-				.keys(" ") // click the button, changing previous KeyNav to tabindex=7
-				.keys("\uE004") // tab
-				.execute("return document.activeElement.textContent")
-				.then(function (value) {
-					assert.equal(value, "seven", "dynamic tabindex change worked");
-				})
 
 		},
 		"arrow navigation": function () {
