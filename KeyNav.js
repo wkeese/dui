@@ -49,6 +49,11 @@ define([
 		childSelector: null,
 
 		postCreate: function () {
+			// If the user hasn't specified a tabindex declaratively, then set to default value.
+			if (!this.hasAttribute("tabindex")){
+				this.tabIndex = "0";
+			}
+
 			if (!this._keyNavCodes) {
 				var keyCodes = this._keyNavCodes = {};
 				keyCodes[keys.HOME] = lang.hitch(this, "focusFirstChild");
@@ -72,12 +77,6 @@ define([
 					self._onChildFocus(this, evt);
 				})
 			);
-		},
-
-		enteredViewCallback: function () {
-			if (!this.hasAttribute("tabindex")){
-				this.tabIndex = "0";
-			}
 		},
 
 		_onLeftArrow: function () {
@@ -161,7 +160,10 @@ define([
 			// tags:
 			//		protected
 
-			child.tabIndex = this.tabIndex;	// for IE focus outline to appear, must set tabIndex before focus
+			// For IE focus outline to appear, must set tabIndex before focus.
+			// If this._savedTabIndex is set, use it instead of this.tabIndex, because it means
+			// the container's tabIndex has already been changed to -1.
+			child.tabIndex = this._savedTabIndex || this.tabIndex;
 			child.focus(last ? "end" : "start");
 
 			// Don't set focusedChild here, because the focus event should trigger a call to _onChildFocus(), which will
@@ -175,10 +177,6 @@ define([
 			// description:
 			//		Initially the container itself has a tabIndex, but when it gets
 			//		focus, switch focus to first child.
-			//
-			//		TODO for 2.0 (or earlier): Instead of having the container tabbable,
-			//		always maintain a single child widget as tabbable, Requires code in startup(),
-			//		addChild(), and removeChild().  That would avoid various issues like #17347.
 			// tags:
 			//		private
 
@@ -194,16 +192,14 @@ define([
 				return;
 			}
 
-			this.focus();
-		},
-
-		_onFocus: dcl.after(function () {
 			// When the container gets focus by being tabbed into, or a descendant gets focus by being clicked,
 			// set the container's tabIndex to -1 (don't remove as that breaks Safari 4) so that tab or shift-tab
 			// will go to the fields after/before the container, rather than the container itself
-			this._initialTabIndex = this.tabIndex;
+			this._savedTabIndex = this.tabIndex;
 			domAttr.set(this, "tabIndex", "-1");
-		}),
+
+			this.focus();
+		},
 
 		_onBlur: dcl.after(function () {
 			// When focus is moved away the container, and its descendant (popup) widgets,
@@ -213,10 +209,10 @@ define([
 
 			// TODO: for 2.0 consider changing this to blur whenever the container blurs, to be truthful that there is
 			// no focused child at that time.
-			domAttr.set(this, "tabIndex", this._initialTabIndex);
+			domAttr.set(this, "tabIndex", this._savedTabIndex);
+			delete this._savedTabIndex;
 			if (this.focusedChild) {
 				this.focusedChild.tabIndex = "-1";
-				this.lastFocusedChild = this.focusedChild;
 				this.focusedChild = null;
 			}
 		}),
@@ -235,8 +231,14 @@ define([
 					this.focusedChild.tabIndex = "-1";
 				}
 
+				// If container still has tabIndex setting then remove it; instead we'll set tabIndex on child
+				if (!("_savedTabIndex" in this)) {
+					this._savedTabIndex = this.tabIndex;
+					domAttr.set(this, "tabIndex", "-1");
+				}
+
 				// mark that the new node is the currently selected one
-				child.tabIndex = this.tabIndex;
+				child.tabIndex = this._savedTabIndex;
 				this.focusedChild = child;
 			}
 		},
