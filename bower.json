@@ -15,7 +15,9 @@
 		".jshintrc",
 		".gitattributes",
 		".travis.yml",
-		"tests",
+		"tests/",
+		"tests/!(boilerplate.js)",
+		"!tests/boilerplateOnload.js",
 		"CONTRIBUTING.md"
 	]
 }
