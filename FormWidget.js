@@ -3,13 +3,13 @@ define([
 	"dojo/window", // winUtils.scrollIntoView
 	"dojo/dom-style", // domStyle
 	"./Widget",
-	"./Invalidating"
-], function (dcl, winUtils, domStyle, Widget, Invalidating) {
+	"./Observing"
+], function (dcl, winUtils, domStyle, Widget, Observing) {
 
 	// module:
 	//		delite/FormWidget
 
-	return dcl([Widget, Invalidating], {
+	return dcl([Widget, Observing], {
 		// summary:
 		//		Mixin for widgets that extend HTMLElement, but conceptually correspond
 		//		to native HTML elements such as `<checkbox>` or `<button>`,
@@ -52,7 +52,7 @@ define([
 		disabled: false,
 
 		preCreate: function () {
-			this.addInvalidatingProperties(
+			this.addRenderingProperties(
 				"disabled",
 				"tabStops",
 				"tabIndex"

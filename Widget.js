@@ -6,10 +6,11 @@ define([
 	"dojo/dom-geometry", // isBodyLtr
 	"dojo/dom-style", // domStyle.set, domStyle.get
 	"dojo/has",
+	"liaison/Observable",
 	"./CustomElement",
 	"./register",
 	"dojo/has!bidi?./Bidi"
-], function (dcl, dom, domClass, domConstruct, domGeometry, domStyle, has, CustomElement, register, Bidi) {
+], function (dcl, dom, domClass, domConstruct, domGeometry, domStyle, has, Observable, CustomElement, register, Bidi) {
 
 	// module:
 	//		delite/Widget
@@ -149,6 +150,11 @@ define([
 			// tags:
 			//		protected
 
+			// Mark that this object is observable by Observable.observe() (and thus Stateful.observe())
+			// This is done in Stateful constructor, but Stateful constructor is not called for widgets
+			if (!this._observable) {
+				Observable.call(this);
+			}
 			this.widgetId = ++cnt;
 		},
 

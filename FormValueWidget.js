@@ -29,7 +29,7 @@ define([
 		readOnly: false,
 
 		preCreate: function () {
-			this.addInvalidatingProperties(
+			this.addRenderingProperties(
 				"readOnly"
 			);
 		},

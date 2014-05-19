@@ -331,7 +331,329 @@ define([
 			assert.strictEqual(superFooWatchedVal, 5, "SuperClass listener on foo not called");
 			sup.bar = 6;
 			assert.strictEqual(superBarWatchedVal, 6, "SuperClass listener on bar not called");
+		},
+		"getSetObserve": function () {
+			var dfd = this.async(1000),
+				count = 0,
+				s = new (dcl(Stateful, {
+					foo: 3
+				}))();
+			assert.strictEqual(s.foo, 3);
+			var watching = s.observe("foo", dfd.rejectOnError(function (newValue, oldValue) {
+				if (++count > 1) {
+					throw new Error("Observer callback should not be called after observation is stopped.");
+				}
+
+				assert.deepEqual(oldValue, {foo: 3});
+				assert.deepEqual(newValue, {foo: 4});
+				assert.strictEqual(s.foo, 4);
+
+				watching.remove();
+				s.foo = 5;
+				assert.strictEqual(s.foo, 5);
+
+				setTimeout(dfd.resolve.bind(dfd), 100);
+			}));
+			s.foo = 4;
+			assert.strictEqual(s.foo, 4);
+		},
+		"removeObserveHandleTwice": function () {
+			var dfd = this.async(1000),
+				s = new (dcl(Stateful, {
+					foo: 3
+				}))(),
+				changes = [];
+
+			var watching = s.observe("foo", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "toBeRemoved", newValues: newValues, oldValues: oldValues});
+			}));
+
+			s.observe("foo", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "toBeAlive", newValues: newValues, oldValues: oldValues});
+			}));
+
+			s.foo = 4;
+			watching.remove();
+			watching.remove();
+			s.foo = 5;
+
+			setTimeout(dfd.callback(function () {
+				assert.deepEqual(changes, [
+					{id: "toBeAlive", newValues: {foo: 5}, oldValues: {foo: 3}}
+				]);
+			}), 100);
+		},
+		"setHash: observe()": function () {
+			var dfd = this.async(1000),
+				s = new (dcl(Stateful, {
+					foo: 0,
+					bar: 0
+				}))(),
+				changes = [];
+
+			s.observe("foo", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "foo", newValues: newValues, oldValues: oldValues});
+			}));
+
+			s.mix({
+				foo: 3,
+				bar: 5
+			});
+
+			assert.strictEqual(s.foo, 3);
+			assert.strictEqual(s.bar, 5);
+
+			setTimeout(dfd.rejectOnError(function () {
+				assert.deepEqual(changes, [{id: "foo", newValues: {foo: 3}, oldValues: {foo: 0}}]);
+
+				var Clz2 = dcl(Stateful, {
+						foo: 0,
+						bar: 0
+					}),
+					s2 = new Clz2();
+				s2.mix(s);
+				assert.strictEqual(s2.foo, 3);
+				assert.strictEqual(s2.bar, 5);
+
+				setTimeout(dfd.callback(function () {
+					// s watchers should not be copied to s2
+					assert.strictEqual(changes.length, 1);
+				}), 100);
+			}), 100);
+		},
+		"wildcard: observe()": function () {
+			var dfd = this.async(1000),
+				s = new (dcl(Stateful, {
+					foo: 0,
+					bar: 0
+				}))();
+			s.mix({
+				foo: 3,
+				bar: 5
+			});
+			var changes = [];
+			s.observe(dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "*", newValues: newValues, oldValues: oldValues});
+			}));
+			s.observe("foo", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "foo", newValues: newValues, oldValues: oldValues});
+			}));
+			s.foo = 4;
+			s.bar = 6;
+			setTimeout(dfd.callback(function () {
+				assert.deepEqual(changes, [
+					{id: "*", newValues: {foo: 4, bar: 6}, oldValues: {foo: 3, bar: 5}},
+					{id: "foo", newValues: {foo: 4}, oldValues: {foo: 3}}
+				]);
+			}), 100);
+		},
+		"_set: observe()": function () {
+			var dfd = this.async(1000),
+				StatefulClass4 = dcl(Stateful, {
+					foo: null,
+					bar: null,
+					_setFooAttr: function (value) {
+						this._set("bar", value);
+						this._set("foo", value);
+					},
+					_setBarAttr: function (value) {
+						this._set("foo", value);
+						this._set("bar", value);
+					}
+				}),
+				attr4 = new StatefulClass4(),
+				changes = [];
+			attr4.observe("foo", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "foo", newValues: newValues, oldValues: oldValues});
+			}));
+			attr4.observe("bar", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "bar", newValues: newValues, oldValues: oldValues});
+			}));
+			attr4.foo = 3;
+			assert.strictEqual(attr4.bar, 3, "value set properly");
+			attr4.bar = 4;
+			assert.strictEqual(attr4.foo, 4, "value set properly");
+
+			setTimeout(dfd.callback(function () {
+				assert.deepEqual(changes, [
+					{id: "foo", newValues: {foo: 4}, oldValues: {foo: null}},
+					{id: "bar", newValues: {bar: 4}, oldValues: {bar: null}},
+				]);
+			}), 100);
+		},
+		"subclasses1: observe()": function () {
+			// Test when superclass and subclass are declared first, and afterwards instantiated
+			var dfd = this.async(1000),
+				SuperClass = dcl(Stateful, {
+					foo: null,
+					bar: null
+				}),
+				SubClass = dcl(SuperClass, {
+					bar: 5
+				}),
+				sub = new SubClass(),
+				changes = [];
+			sub.observe("foo", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "subfoo", newValues: newValues, oldValues: oldValues});
+			}));
+			sub.observe("bar", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "subbar", newValues: newValues, oldValues: oldValues});
+			}));
+			sub.foo = 3;
+			sub.bar = 4;
+
+			var sup = new SuperClass();
+			sup.observe("foo", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "supfoo", newValues: newValues, oldValues: oldValues});
+			}));
+			sup.observe("bar", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "supbar", newValues: newValues, oldValues: oldValues});
+			}));
+			sup.foo = 5;
+			sup.bar = 6;
+
+			setTimeout(dfd.callback(function () {
+				assert.deepEqual(changes, [
+					{id: "subfoo", newValues: {foo: 3}, oldValues: {foo: null}},
+					{id: "subbar", newValues: {bar: 4}, oldValues: {bar: 5}},
+					{id: "supfoo", newValues: {foo: 5}, oldValues: {foo: null}},
+					{id: "supbar", newValues: {bar: 6}, oldValues: {bar: null}}
+				]);
+			}), 100);
+		},
+		"subclasses2: observe()": function () {
+			// Test when superclass is declared and instantiated, then subclass is declared and use later
+			var dfd = this.async(1000),
+				SuperClass = dcl(Stateful, {
+					foo: null,
+					bar: null
+				}),
+				sup = new SuperClass(),
+				changes = [];
+			sup.observe("foo", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "supfoo", newValues: newValues, oldValues: oldValues});
+			}));
+			sup.observe("bar", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "supbar", newValues: newValues, oldValues: oldValues});
+			}));
+			sup.foo = 5;
+			sup.bar = 6;
+
+			var customSetterCalled,
+				SubClass = dcl(SuperClass, {
+					bar: 5,
+					_setBarAttr: function (val) {
+						// this should get called even though SuperClass doesn't have a custom setter for "bar"
+						customSetterCalled = true;
+						this._set("bar", val);
+					}
+				}),
+				sub = new SubClass();
+			sub.observe("foo",  dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "subfoo", newValues: newValues, oldValues: oldValues});
+			}));
+			sub.observe("bar", dfd.rejectOnError(function (newValues, oldValues) {
+				changes.push({id: "subbar", newValues: newValues, oldValues: oldValues});
+			}));
+			sub.foo = 3;
+			sub.bar = 4;
+			assert.ok(customSetterCalled, "SubClass custom setter called");
+
+			setTimeout(dfd.rejectOnError(function () {
+				assert.deepEqual(changes, [
+					{id: "supfoo", newValues: {foo: 5}, oldValues: {foo: null}},
+					{id: "supbar", newValues: {bar: 6}, oldValues: {bar: null}},
+					{id: "subfoo", newValues: {foo: 3}, oldValues: {foo: null}},
+					{id: "subbar", newValues: {bar: 4}, oldValues: {bar: 5}}
+				]);
+				sup.bar = 6;
+				setTimeout(dfd.callback(function () {
+					assert.strictEqual(changes.length, 4);
+				}), 100);
+			}), 100);
+		},
+		"observe(): Setting a value that is same as the current property value": function () {
+			var dfd = this.async(1000),
+				stateful = new (dcl(Stateful, {
+					foo: undefined,
+					bar: undefined,
+					baz: undefined
+				}))({
+					foo: "Foo",
+					bar: NaN,
+					baz: 0
+				});
+			stateful.observe(dfd.callback(function (newValues, oldValues) {
+				assert.deepEqual(newValues, {baz: -0});
+				assert.deepEqual(oldValues, {baz: 0});
+			}));
+			stateful.foo = "Foo";
+			stateful.bar = NaN;
+			stateful.baz = -0;
+		},
+		"notifyCurrentValue()": function () {
+			var dfd = this.async(1000),
+				stateful = new (dcl(Stateful, {
+					foo: undefined
+				}))({
+					foo: "Foo"
+				});
+			stateful.observe(dfd.callback(function (newValues, oldValues) {
+				assert.deepEqual(newValues, {foo: "Foo"});
+				assert.deepEqual(oldValues, {foo: "Foo"});
+			}));
+			stateful.notifyCurrentValue("foo");
+		},
+		"Stateful.PropertyListObserver#addProperties()": function () {
+			var dfd = this.async(1000),
+				stateful = new (dcl(Stateful, {
+					foo: undefined,
+					bar: undefined,
+					baz: undefined
+				}))(),
+				hObserve = stateful.observe(dfd.callback(function (newValues, oldValues) {
+					assert.deepEqual(newValues, {foo: "foo", bar: "bar"});
+					assert.deepEqual(oldValues, {foo: undefined, bar: undefined});
+				}));
+			hObserve.addProperties("foo", "bar");
+			stateful.foo = "foo";
+			stateful.bar = "bar";
+			stateful.baz = "baz";
+		},
+		"Stateful.PropertyListObserver#addDependants()": function () {
+			var dfd = this.async(1000),
+				stateful = new (dcl(Stateful, {
+					foo: undefined
+				}))(),
+				hObserve = stateful.observe(dfd.callback(function (newValues, oldValues) {
+					assert.deepEqual(newValues, {foo: 0});
+					assert.deepEqual(oldValues, {foo: undefined});
+				})),
+				hCompute = stateful.observe(dfd.rejectOnError(function (newValues) {
+					if ("foo" in newValues) {
+						if (this.foo < 0) {
+							this.foo = 0;
+						}
+					}
+				}));
+			hObserve.addDependants(hCompute);
+			stateful.foo = -1;
+		},
+		"Stateful.PropertyListObserver#deliver(), Stateful.PropertyListObserver#discardChanges()": function () {
+			var changes = [],
+				stateful = new (dcl(Stateful, {
+					foo: undefined
+				}))({
+					foo: "Foo0"
+				}),
+				hObserve = stateful.observe(function (newValues, oldValues) {
+					changes.push({newValues: newValues, oldValues: oldValues});
+				});
+			stateful.foo = "Foo1";
+			hObserve.discardChanges();
+			stateful.foo = "Foo2";
+			hObserve.deliver();
+			assert.deepEqual(changes, [{newValues: {foo: "Foo2"}, oldValues: {foo: "Foo1"}}]);
 		}
 	});
 });
-

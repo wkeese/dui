@@ -1,9 +1,10 @@
-define(["dcl/dcl"], function (dcl) {
-
-	// module:
-	//		delite/Stateful
-
-	var apn = {};
+/** @module delite/Stateful */
+define([
+	"dcl/dcl",
+	"liaison/Observable"
+], function (dcl, Observable) {
+	var EMPTY_ARRAY = [],
+		apn = {};
 
 	function propNames(name) {
 		// summary:
@@ -22,6 +23,10 @@ define(["dcl/dcl"], function (dcl) {
 			g: "_get" + uc + "Attr"
 		};
 		return ret;
+	}
+
+	function areSameValues(lhs, rhs) {
+		return lhs === rhs && (lhs !== 0 || 1 / lhs === 1 / rhs) || lhs !== lhs && rhs !== rhs;
 	}
 
 	var Stateful = dcl(null, {
@@ -109,6 +114,9 @@ define(["dcl/dcl"], function (dcl) {
 					ctor.prototype._introspect(ctor.prototype._getProps());
 					ctor._introspected = true;
 				}
+				if (!this._observable) {
+					Observable.call(this);
+				}
 			},
 
 			after: function (args) {
@@ -160,6 +168,15 @@ define(["dcl/dcl"], function (dcl) {
 			if (this._watchCallbacks) {
 				this._watchCallbacks(name, oldValue, value);
 			}
+			// Even if Object.observe() is natively available,
+			// automatic change record emission won't happen if there is a ECMAScript setter
+			!areSameValues(value, oldValue) && Observable.getNotifier(this).notify({
+				// Property is never new because setting up shadow property defines the property
+				type: Observable.CHANGETYPE_UPDATE,
+				object: this,
+				name: name + "",
+				oldValue: oldValue
+			});
 		},
 
 		_get: function (name) {
@@ -173,6 +190,81 @@ define(["dcl/dcl"], function (dcl) {
 			//		The property to get.
 
 			return this[propNames(name).p];
+		},
+
+		/**
+		 * Observe for change in properties.
+		 * Callback is called at the end of micro-task of changes
+		 * with two arguments, `newValues` and `oldValues`,
+		 * which are hash tables of new/old values keyed by changed property.
+		 * Multiple changes to a property in a micro-task is squashed in `newValues` and `oldValues`.
+		 * @method module:delite/Stateful#observe
+		 * @param {...string} [names] The property names to look at.
+		 * @param {function} callback The callback.
+		 * @returns {module:delite/Stateful.PropertyListObserver}
+		 *     The observer that can be used to stop observation
+		 *     or synchronously deliver/discard pending change records.
+		 * @example
+		 *     var stateful = new (dcl(Stateful, {
+		 *             foo: undefined,
+		 *             bar: undefined,
+		 *             baz: undefined
+		 *         }))({
+		 *             foo: 3,
+		 *             bar: 5,
+		 *             baz: 7
+		 *         });
+		 *     stateful.observe(function (newValues, oldValues) {
+		 *         // newValues is {foo: 6, bar: 8, baz: 10}
+		 *         // oldValues is {foo: 3, bar: 5, baz: 7}
+		 *     });
+		 *     stateful.observe("foo", "bar", function (newValues, oldValues) {
+		 *         // newValues is {foo: 6, bar: 8}
+		 *         // oldValues is {foo: 3, bar: 5}
+		 *     });
+		 *     stateful.foo = 4;
+		 *     stateful.bar = 6;
+		 *     stateful.baz = 8;
+		 *     stateful.foo = 6;
+		 *     stateful.bar = 8;
+		 *     stateful.baz = 10;
+		 */
+		observe: function () {
+			var callback,
+				names = [];
+
+			EMPTY_ARRAY.some.call(arguments, function (arg) {
+				if (typeof arg !== "function") {
+					names.push(arg);
+				} else {
+					callback = arg;
+					return true;
+				}
+			});
+
+			var h = new Stateful.PropertyListObserver(this, names);
+			h.open(callback, this);
+			return h;
+		},
+
+		/**
+		 * Notify current value to observers.
+		 * Handy to manually schedule invocation of observer callbacks when there is no change in value.
+		 * @method module:delite/Stateful#notifyCurrentValue
+		 * @param {string} name The property name.
+		 */
+		notifyCurrentValue: function (name) {
+			var value = this[propNames(name).p];
+			if (this._watchCallbacks) {
+				this._watchCallbacks(name, value, value);
+			}
+			Observable.getNotifier(this).notify({
+				// Property is never new because setting up shadow property defines the property
+				type: Observable.CHANGETYPE_UPDATE,
+				object: this,
+				name: name + "",
+				oldValue: value
+			});
 		},
 
 		watch: function (/*String?*/ name, /*Function*/ callback) {
@@ -191,6 +283,8 @@ define(["dcl/dcl"], function (dcl) {
 			//		the property has been changed. The callback will be called with the |this|
 			//		set to the instance, the first argument as the name of the property, the
 			//		second argument as the old value and the third argument as the new value.
+
+			console.warn("Stateful.watch() is deprecated. To be removed soon. Use Stateful.observe() instead.");
 
 			var callbacks = this._watchCallbacks;
 			if (!callbacks) {
@@ -235,6 +329,149 @@ define(["dcl/dcl"], function (dcl) {
 	});
 
 	dcl.chainAfter(Stateful, "_introspect");
+
+	var REGEXP_SHADOW_PROPS = /^_(.+)Attr$/;
+
+	/**
+	 * An observer to observe multiple {@link module:delite/Stateful Stateful} properties at once.
+	 * @class module:delite/Stateful.PropertyListObserver
+	 * @property {Object} o The {@link module:delite/Stateful Stateful} being observed.
+	 * @property {string[]} [names] The list of properties this observer cares about.
+	 */
+	Stateful.PropertyListObserver = function (o, names) {
+		this.o = o;
+		this.names = {};
+		this.dependants = [];
+		names && names.forEach(function (name) {
+			this.names[name] = 1;
+		}, this);
+	};
+
+	Stateful.PropertyListObserver.prototype = /** @lends module:delite/Stateful.PropertyListObserver# */ {
+		/**
+		 * Converts `Object.observe()`-style change records to hash tables of new/old property values.
+		 * @param {Array} records `Object.observe()`-style change records.
+		 * @returns {Object[]} Hash tables of new/old property values.
+		 * @private
+		 */
+		_filter: function (records) {
+			var s,
+				self = this,
+				wildcard = true,
+				newValues = {},
+				oldValues = {};
+			for (s in self.names) {
+				wildcard = false;
+				break;
+			}
+			records.forEach(function (record) {
+				var noShadow = !Observable.useNative || !REGEXP_SHADOW_PROPS.test(record.name);
+				if ((wildcard && noShadow || record.name in self.names) && !(record.name in newValues)) {
+					newValues[record.name] = self.o[record.name];
+					if ("oldValue" in record) {
+						oldValues[record.name] = record.oldValue;
+					}
+				}
+			});
+			/* jshint unused: false */
+			for (s in newValues) {
+				return [newValues, oldValues];
+			}
+		},
+
+		/**
+		 * Add properties to the "observing list".
+		 * @param {...string} names The properties.
+		 */
+		addProperties: function () {
+			EMPTY_ARRAY.forEach.call(arguments, function (arg) {
+				this.names[arg] = 1;
+			}, this);
+			return this;
+		},
+
+		/**
+		 * Add observers that should run before this observer.
+		 * @param {...module:delite/Stateful.PropertyListObserver} observers The observers.
+		 */
+		addDependants: function () {
+			EMPTY_ARRAY.forEach.call(arguments, function (arg) {
+				if (this.dependants.indexOf(arg) < 0) {
+					this.dependants.push(arg);
+				}
+			}, this);
+			return this;
+		},
+
+		/**
+		 * Starts the observation.
+		 * {@link module:delite/Stateful#observe `Stateful#observe()`} calls this method automatically.
+		 * @param {function} callback The change callback.
+		 * @param {Object} thisObject The object that should works as "this" object for callback.
+		 */
+		open: function (callback, thisObject) {
+			this.boundCallback = function (records) {
+				if (!this.closed && !this.beingDiscarded) {
+					if (this._recordsQueue) {
+						EMPTY_ARRAY.push.apply(this._recordsQueue, records);
+					} else {
+						if (this.dependants.length > 0) {
+							this._recordsQueue = [];
+							this.dependants.forEach(function (dependant) {
+								dependant.deliver();
+							});
+							this.deliver();
+							EMPTY_ARRAY.push.apply(records, this._recordsQueue);
+							this._recordsQueue = undefined;
+						}
+						var args = this._filter.call(this, records);
+						args && callback.apply(thisObject, args);
+					}
+				}
+			}.bind(this);
+			this.h = Observable.observe(this.o, this.boundCallback);
+			return this.o;
+		},
+
+		/**
+		 * Synchronously delivers pending change records.
+		 */
+		deliver: function () {
+			this.boundCallback && Observable.deliverChangeRecords(this.boundCallback);
+		},
+
+		/**
+		 * Discards pending change records.
+		 */
+		discardChanges: function () {
+			this.beingDiscarded = true;
+			this.boundCallback && Observable.deliverChangeRecords(this.boundCallback);
+			this.beingDiscarded = false;
+			return this.o;
+		},
+
+		/**
+		 * Does nothing, just exists for API compatibility with liaison and other data binding libraries.
+		 */
+		setValue: function () {},
+
+		/**
+		 * Stops the observation.
+		 */
+		close: function () {
+			if (this.h) {
+				this.h.remove();
+				this.h = null;
+			}
+			this.closed = true;
+		}
+	};
+
+	/**
+	 * Synonym for {@link module:delite/Stateful.PropertyListObserver#close `close()`}.
+	 * @method
+	 */
+	Stateful.PropertyListObserver.prototype.remove = Stateful.PropertyListObserver.prototype.close;
 
 	return Stateful;
 });
