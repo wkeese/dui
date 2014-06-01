@@ -199,7 +199,6 @@ define([
 		 * which are hash tables of new/old values keyed by changed property.
 		 * Multiple changes to a property in a micro-task is squashed in `newValues` and `oldValues`.
 		 * @method module:delite/Stateful#observe
-		 * @param {...string} [names] The property names to look at.
 		 * @param {function} callback The callback.
 		 * @returns {module:delite/Stateful.PropertyListObserver}
 		 *     The observer that can be used to stop observation
@@ -218,10 +217,6 @@ define([
 		 *         // newValues is {foo: 6, bar: 8, baz: 10}
 		 *         // oldValues is {foo: 3, bar: 5, baz: 7}
 		 *     });
-		 *     stateful.observe("foo", "bar", function (newValues, oldValues) {
-		 *         // newValues is {foo: 6, bar: 8}
-		 *         // oldValues is {foo: 3, bar: 5}
-		 *     });
 		 *     stateful.foo = 4;
 		 *     stateful.bar = 6;
 		 *     stateful.baz = 8;
@@ -229,21 +224,9 @@ define([
 		 *     stateful.bar = 8;
 		 *     stateful.baz = 10;
 		 */
-		observe: function () {
-			var callback,
-				names = [];
-
-			EMPTY_ARRAY.some.call(arguments, function (arg) {
-				if (typeof arg !== "function") {
-					names.push(arg);
-				} else {
-					callback = arg;
-					return true;
-				}
-			});
-
-			var h = new Stateful.PropertyListObserver(this, names);
-			h.open(callback, this);
+		observe: function (callback) {
+			var h = new Stateful.PropertyListObserver(this);
+			h.open(callback);
 			return h;
 		},
 
@@ -333,18 +316,13 @@ define([
 	var REGEXP_SHADOW_PROPS = /^_(.+)Attr$/;
 
 	/**
-	 * An observer to observe multiple {@link module:delite/Stateful Stateful} properties at once.
+	 * An observer to all multiple {@link module:delite/Stateful Stateful} properties at once.
 	 * @class module:delite/Stateful.PropertyListObserver
 	 * @property {Object} o The {@link module:delite/Stateful Stateful} being observed.
-	 * @property {string[]} [names] The list of properties this observer cares about.
 	 */
-	Stateful.PropertyListObserver = function (o, names) {
+	Stateful.PropertyListObserver = function (o) {
 		this.o = o;
-		this.names = {};
 		this.dependants = [];
-		names && names.forEach(function (name) {
-			this.names[name] = 1;
-		}, this);
 	};
 
 	Stateful.PropertyListObserver.prototype = /** @lends module:delite/Stateful.PropertyListObserver# */ {
@@ -357,16 +335,11 @@ define([
 		_filter: function (records) {
 			var s,
 				self = this,
-				wildcard = true,
 				newValues = {},
 				oldValues = {};
-			for (s in self.names) {
-				wildcard = false;
-				break;
-			}
 			records.forEach(function (record) {
 				var noShadow = !Observable.useNative || !REGEXP_SHADOW_PROPS.test(record.name);
-				if ((wildcard && noShadow || record.name in self.names) && !(record.name in newValues)) {
+				if (noShadow && !(record.name in newValues)) {
 					newValues[record.name] = self.o[record.name];
 					if ("oldValue" in record) {
 						oldValues[record.name] = record.oldValue;
@@ -377,17 +350,6 @@ define([
 			for (s in newValues) {
 				return [newValues, oldValues];
 			}
-		},
-
-		/**
-		 * Add properties to the "observing list".
-		 * @param {...string} names The properties.
-		 */
-		addProperties: function () {
-			EMPTY_ARRAY.forEach.call(arguments, function (arg) {
-				this.names[arg] = 1;
-			}, this);
-			return this;
 		},
 
 		/**

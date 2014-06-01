@@ -10,30 +10,13 @@ define([
 	 * @class module:delite/Observing
 	 */
 	return dcl([Stateful, Destroyable], /** @lends module:delite/Observing# */ {
-		/**
-		 * Add properties that are used to compute other properties.
-		 * @param {...string} names The properties names.
-		 */
-		addComputingProperties: function () {
-			var hComputing = this._hComputing = this._hComputing || this.own(this.observe(this.computeProperties))[0];
-			hComputing.addProperties.apply(hComputing, arguments);
-			if (this._hComputing && this._hRendering) {
-				this._hRendering.addDependants(this._hComputing);
-			}
-			return hComputing;
-		},
-
-		/**
-		 * Add properties that are used to render widget UI.
-		 * @param {...string} names The properties names.
-		 */
-		addRenderingProperties: function () {
-			var hRendering = this._hRendering = this._hRendering || this.own(this.observe(this.refreshRendering))[0];
-			hRendering.addProperties.apply(hRendering, arguments);
-			if (this._hComputing && this._hRendering) {
-				this._hRendering.addDependants(this._hComputing);
-			}
-			return hRendering;
+		constructor: function () {
+			// TODO: this won't be called for widgets
+			this.own(
+				this._hComputing = this.observe(this.refreshProperties.bind(this)),
+				this._hRendering = this.observe(this.refreshRendering.bind(this))
+			);
+			this._hRendering.addDependants(this._hComputing);
 		},
 
 		/**
