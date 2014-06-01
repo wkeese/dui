@@ -322,7 +322,6 @@ define([
 	 */
 	Stateful.PropertyListObserver = function (o) {
 		this.o = o;
-		this.dependants = [];
 	};
 
 	Stateful.PropertyListObserver.prototype = /** @lends module:delite/Stateful.PropertyListObserver# */ {
@@ -353,19 +352,6 @@ define([
 		},
 
 		/**
-		 * Add observers that should run before this observer.
-		 * @param {...module:delite/Stateful.PropertyListObserver} observers The observers.
-		 */
-		addDependants: function () {
-			EMPTY_ARRAY.forEach.call(arguments, function (arg) {
-				if (this.dependants.indexOf(arg) < 0) {
-					this.dependants.push(arg);
-				}
-			}, this);
-			return this;
-		},
-
-		/**
 		 * Starts the observation.
 		 * {@link module:delite/Stateful#observe `Stateful#observe()`} calls this method automatically.
 		 * @param {function} callback The change callback.
@@ -377,15 +363,6 @@ define([
 					if (this._recordsQueue) {
 						EMPTY_ARRAY.push.apply(this._recordsQueue, records);
 					} else {
-						if (this.dependants.length > 0) {
-							this._recordsQueue = [];
-							this.dependants.forEach(function (dependant) {
-								dependant.deliver();
-							});
-							this.deliver();
-							EMPTY_ARRAY.push.apply(records, this._recordsQueue);
-							this._recordsQueue = undefined;
-						}
 						var args = this._filter.call(this, records);
 						args && callback.apply(thisObject, args);
 					}

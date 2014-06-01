@@ -16,7 +16,6 @@ define([
 				this._hComputing = this.observe(this.refreshProperties.bind(this)),
 				this._hRendering = this.observe(this.refreshRendering.bind(this))
 			);
-			this._hRendering.addDependants(this._hComputing);
 		},
 
 		/**
