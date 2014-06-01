@@ -1,17 +1,19 @@
 /** @module delite/Observing */
 define([
 	"dcl/dcl",
-	"./Stateful",
-	"./Destroyable"
-], function (dcl, Stateful, Destroyable) {
+	"./Widget"
+], function (dcl, Widget) {
+
+	// TODO: need support for invalidateProperty() and invalidateRendering() w/out any arguments, which call
+	// refreshProperties() and refreshRendering() without a hash at all.
+
 	/**
-	 * Mixin class to for widgets
+	 * Base class for widgets
 	 * that want to calculate computed properties at once and/or to render UI at once upon multiple property changes.
-	 * @class module:delite/Observing
+	 * @mixin module:delite/Observing
 	 */
-	return dcl([Stateful, Destroyable], /** @lends module:delite/Observing# */ {
-		constructor: function () {
-			// TODO: this won't be called for widgets
+	return dcl(Widget, /** @lends module:delite/Observing# */ {
+		buildRendering: dcl.after(function () {
 			this.own(
 				this._hComputing = this.observe(function () {
 					this.refreshProperties();
@@ -19,7 +21,7 @@ define([
 				}.bind(this)),
 				this._hRendering = this.observe(this.refreshRendering.bind(this))
 			);
-		},
+		}),
 
 		/**
 		 * Synchronously deliver change records for computed properties
