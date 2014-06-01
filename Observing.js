@@ -13,7 +13,10 @@ define([
 		constructor: function () {
 			// TODO: this won't be called for widgets
 			this.own(
-				this._hComputing = this.observe(this.refreshProperties.bind(this)),
+				this._hComputing = this.observe(function () {
+					this.refreshProperties();
+					this._hComputing.discardChanges(); // so refreshProperties() doesn't trigger another call to itself
+				}.bind(this)),
 				this._hRendering = this.observe(this.refreshRendering.bind(this))
 			);
 		},
