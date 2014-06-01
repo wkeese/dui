@@ -1,11 +1,9 @@
 /** @module delite/Stateful */
 define([
-	"dcl/dcl",
-	"liaison/Observable"
-], function (dcl, Observable) {
-	var EMPTY_ARRAY = [],
-		apn = {};
+	"dcl/dcl"
+], function (dcl) {
 
+	var apn = {};
 	function propNames(name) {
 		// summary:
 		//		Helper function to map "foo" --> "_setFooAttr" with caching to avoid recomputing strings.
@@ -114,9 +112,6 @@ define([
 					ctor.prototype._introspect(ctor.prototype._getProps());
 					ctor._introspected = true;
 				}
-				if (!this._observable) {
-					Observable.call(this);
-				}
 			},
 
 			after: function (args) {
@@ -162,17 +157,24 @@ define([
 			//		It is designed to be used by descendant class when there are two values
 			//		of attributes that are linked, but calling .set() is not appropriate.
 
+			// TODO: shouldn't this be comparing before and after of this[name] rather than this[shadowPropName]?
 			var shadowPropName = propNames(name).p;
 			var oldValue = this[shadowPropName];
+			if (!areSameValues(value, oldValue)) {
+				this._notify(name, oldValue);
+			}
 			this[shadowPropName] = value;
 			if (this._watchCallbacks) {
 				this._watchCallbacks(name, oldValue, value);
 			}
+		},
+		
+		_notify: function (name, oldValue) {
 			// Even if Object.observe() is natively available,
 			// automatic change record emission won't happen if there is a ECMAScript setter
-			!areSameValues(value, oldValue) && Observable.getNotifier(this).notify({
+			Object.getNotifier && Object.getNotifier(this).notify({
 				// Property is never new because setting up shadow property defines the property
-				type: Observable.CHANGETYPE_UPDATE,
+				type: "update",
 				object: this,
 				name: name + "",
 				oldValue: oldValue
@@ -236,17 +238,10 @@ define([
 		 * @param {string} name The property name.
 		 */
 		notifyCurrentValue: function (name) {
-			var value = this[propNames(name).p];
-			if (this._watchCallbacks) {
-				this._watchCallbacks(name, value, value);
-			}
-			Observable.getNotifier(this).notify({
-				// Property is never new because setting up shadow property defines the property
-				type: Observable.CHANGETYPE_UPDATE,
-				object: this,
-				name: name + "",
-				oldValue: value
-			});
+			// TODO: shouldn't this send this[name] rather than this[shadowPropName]?
+			var shadowPropName = propNames(name).p;
+			var oldValue = this[shadowPropName];
+			this._notify(name, oldValue);
 		},
 
 		watch: function (/*String?*/ name, /*Function*/ callback) {
@@ -312,40 +307,30 @@ define([
 
 	dcl.chainAfter(Stateful, "_introspect");
 
-	var REGEXP_SHADOW_PROPS = /^_(.+)Attr$/;
-
 	/**
 	 * An observer to all multiple {@link module:delite/Stateful Stateful} properties at once.
 	 * @class module:delite/Stateful.PropertyListObserver
 	 * @property {Object} o The {@link module:delite/Stateful Stateful} being observed.
 	 */
 	Stateful.PropertyListObserver = function (o) {
-		this.o = o;
+		this.oldValues = {};
+		this.h = dcl.after(o, "_notify", function (name, oldVal) {
+			// First time a given property is about to be changed [after the most recent call to deliver()],
+			// save its original value in oldValues[] hash.
+			if (!(name in this.oldValues)) {
+				this.oldValues[name] = oldVal;
+			}
+
+			// First time any property is about to be changed [after the most recent call to deliver()],
+			// schedule a new call to deliver().
+			if (!this._pendingChanges) {
+				this._pendingChanges = true;
+				schedule(this);
+			}
+		}.bind(this));
 	};
 
 	Stateful.PropertyListObserver.prototype = /** @lends module:delite/Stateful.PropertyListObserver# */ {
-		/**
-		 * Converts `Object.observe()`-style change records to hash tables of new/old property values.
-		 * @param {Array} records `Object.observe()`-style change records.
-		 * @returns {Object[]} Hash tables of new/old property values.
-		 * @private
-		 */
-		_filter: function (records) {
-			var self = this,
-				newValues = {};
-			records.forEach(function (record) {
-				var noShadow = !Observable.useNative || !REGEXP_SHADOW_PROPS.test(record.name);
-				if (noShadow && !(record.name in newValues)) {
-					newValues[record.name] = self.o[record.name];
-					if ("oldValue" in record) {
-						oldValues[record.name] = record.oldValue;
-					}
-				}
-			});
-
-			return oldValues;
-		},
-
 		/**
 		 * Starts the observation.
 		 * {@link module:delite/Stateful#observe `Stateful#observe()`} calls this method automatically.
@@ -353,34 +338,26 @@ define([
 		 * @param {Object} thisObject The object that should works as "this" object for callback.
 		 */
 		open: function (callback, thisObject) {
-			this.boundCallback = function (records) {
-				if (!this.closed && !this.beingDiscarded) {
-					if (this._recordsQueue) {
-						EMPTY_ARRAY.push.apply(this._recordsQueue, records);
-					} else {
-						callback(this._filter(records));
-					}
-				}
-			}.bind(this);
-			this.h = Observable.observe(this.o, this.boundCallback);
-			return this.o;
+			this.callback = thisObject ? callback.bind(thisObject) : callback;
 		},
 
 		/**
 		 * Synchronously delivers pending change records.
 		 */
 		deliver: function () {
-			this.boundCallback && Observable.deliverChangeRecords(this.boundCallback);
+			if (this._pendingChanges) {
+				var oldValues = this.oldValues;
+				this.discardChanges();
+				this.callback(oldValues);
+			}
 		},
 
 		/**
 		 * Discards pending change records.
 		 */
 		discardChanges: function () {
-			this.beingDiscarded = true;
-			this.boundCallback && Observable.deliverChangeRecords(this.boundCallback);
-			this.beingDiscarded = false;
-			return this.o;
+			this.oldValues = {};
+			this._pendingChanges = false;
 		},
 
 		/**
@@ -392,11 +369,8 @@ define([
 		 * Stops the observation.
 		 */
 		close: function () {
-			if (this.h) {
-				this.h.remove();
-				this.h = null;
-			}
-			this.closed = true;
+			this.discardChanges();
+			this.h.remove();
 		}
 	};
 
@@ -405,6 +379,22 @@ define([
 	 * @method
 	 */
 	Stateful.PropertyListObserver.prototype.remove = Stateful.PropertyListObserver.prototype.close;
+
+	// Code to schedule a PropertyListObserver to run in next cycle.
+	var queued = [], timer;
+	function schedule(/** PropertyListObserver */ p) {
+		if (!timer) {
+			timer = setTimeout(function () {
+				// Execute all requests including ones that come while this callback is running.
+				var observer;
+				while ((observer = queued.shift())) {
+					observer.deliver();
+				}
+				timer = null;
+			}, 0);
+		}
+		queued.push(p);
+	}
 
 	return Stateful;
 });
