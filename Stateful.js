@@ -194,10 +194,9 @@ define([
 
 		/**
 		 * Observe for change in properties.
-		 * Callback is called at the end of micro-task of changes
-		 * with two arguments, `newValues` and `oldValues`,
-		 * which are hash tables of new/old values keyed by changed property.
-		 * Multiple changes to a property in a micro-task is squashed in `newValues` and `oldValues`.
+		 * Callback is called at the end of micro-task of changes with a hash table of
+		 * old values keyed by changed property.
+		 * Multiple changes to a property in a micro-task is squashed .
 		 * @method module:delite/Stateful#observe
 		 * @param {function} callback The callback.
 		 * @returns {module:delite/Stateful.PropertyListObserver}
@@ -332,10 +331,8 @@ define([
 		 * @private
 		 */
 		_filter: function (records) {
-			var s,
-				self = this,
-				newValues = {},
-				oldValues = {};
+			var self = this,
+				newValues = {};
 			records.forEach(function (record) {
 				var noShadow = !Observable.useNative || !REGEXP_SHADOW_PROPS.test(record.name);
 				if (noShadow && !(record.name in newValues)) {
@@ -345,10 +342,8 @@ define([
 					}
 				}
 			});
-			/* jshint unused: false */
-			for (s in newValues) {
-				return [newValues, oldValues];
-			}
+
+			return oldValues;
 		},
 
 		/**
@@ -363,8 +358,7 @@ define([
 					if (this._recordsQueue) {
 						EMPTY_ARRAY.push.apply(this._recordsQueue, records);
 					} else {
-						var args = this._filter.call(this, records);
-						args && callback.apply(thisObject, args);
+						callback(this._filter(records));
 					}
 				}
 			}.bind(this);

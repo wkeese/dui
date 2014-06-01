@@ -54,14 +54,12 @@ define([
 
 		/**
 		 * Callback function to calculate computed properties upon property changes.
-		 * @param {Object} newValues The hash table of new property values, keyed by property names.
 		 * @param {Object} oldValues The hash table of old property values, keyed by property names.
 		 */
 		computeProperties: function () {},
 
 		/**
 		 * Callback function to render UI upon property changes.
-		 * @param {Object} newValues The hash table of new property values, keyed by property names.
 		 * @param {Object} oldValues The hash table of old property values, keyed by property names.
 		 */
 		refreshRendering: function () {}
