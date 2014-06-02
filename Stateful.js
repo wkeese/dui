@@ -1,7 +1,8 @@
 /** @module delite/Stateful */
 define([
-	"dcl/dcl"
-], function (dcl) {
+	"dcl/dcl",
+	"dcl/advise"
+], function (dcl, advise) {
 
 	var apn = {};
 	function propNames(name) {
@@ -314,7 +315,7 @@ define([
 	 */
 	Stateful.PropertyListObserver = function (o) {
 		this.oldValues = {};
-		this.h = dcl.after(o, "_notify", function (name, oldVal) {
+		this.h = advise.after(o, "_notify", function (name, oldVal) {
 			// First time a given property is about to be changed [after the most recent call to deliver()],
 			// save its original value in oldValues[] hash.
 			if (!(name in this.oldValues)) {
@@ -323,10 +324,7 @@ define([
 
 			// First time any property is about to be changed [after the most recent call to deliver()],
 			// schedule a new call to deliver().
-			if (!this._pendingChanges) {
-				this._pendingChanges = true;
-				schedule(this);
-			}
+			schedule(this);
 		}.bind(this));
 	};
 
@@ -339,16 +337,18 @@ define([
 		 */
 		open: function (callback, thisObject) {
 			this.callback = thisObject ? callback.bind(thisObject) : callback;
+			prepare(this);
 		},
 
 		/**
 		 * Synchronously delivers pending change records.
 		 */
 		deliver: function () {
-			if (this._pendingChanges) {
+			for (var s in this.oldValues) {	// protect against calling callback() when nothing to do.  overkill?
 				var oldValues = this.oldValues;
-				this.discardChanges();
+				this.oldValues = {};
 				this.callback(oldValues);
+				return;
 			}
 		},
 
@@ -357,7 +357,7 @@ define([
 		 */
 		discardChanges: function () {
 			this.oldValues = {};
-			this._pendingChanges = false;
+			unschedule(this);
 		},
 
 		/**
@@ -380,20 +380,24 @@ define([
 	 */
 	Stateful.PropertyListObserver.prototype.remove = Stateful.PropertyListObserver.prototype.close;
 
-	// Code to schedule a PropertyListObserver to run in next cycle.
-	var queued = [], timer;
+	// Code to schedule a PropertyListObserver to run in next cycle, obeying Object.observe() spec
+	// about order observers are run
+	var queued = [], timer, seq;
+	function prepare(/** PropertyListObserver */ p) { p._seq = seq++; }
 	function schedule(/** PropertyListObserver */ p) {
 		if (!timer) {
-			timer = setTimeout(function () {
+			timer = setTimeout(function () {	// TODO: use liaison/schedule()
 				// Execute all requests including ones that come while this callback is running.
-				var observer;
-				while ((observer = queued.shift())) {
-					observer.deliver();
+				while (queued.length) {
+					(queued.shift()).deliver();
 				}
 				timer = null;
 			}, 0);
 		}
-		queued.push(p);
+		queued[p._seq] = p;
+	}
+	function unschedule(/** PropertyListObserver */ p) {
+		delete queued[p._seq];
 	}
 
 	return Stateful;
