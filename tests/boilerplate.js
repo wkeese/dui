@@ -63,15 +63,15 @@ for (i = 0; (script = scripts[i]); i++) {
 /* global require:true */
 require = {
 	baseUrl: testDir + "../../",
-	// TODO: when all tests converted from DOH to intern, remove this packages map
 	packages: [
-		{name: "dcl", location: "dcl"},
-		{name: "delite", location: "delite"},
-		{name: "doh", location: "util/doh"},
-		{name: "dojo", location: "dojo"},
-		{name: "requirejs-domready", location: "requirejs-domready"},
-		{name: "requirejs-dplugins", location: "requirejs-dplugins"}
+		{name: "doh", location: "util/doh"},		// TODO: remove when all tests converted to intern
+		{name: "jquery", location: "jquery/src"}
 	],
+	map: {
+		jquery: {
+			"jquery/selector": "jquery/selector-native"	// don't pull in sizzle
+		}
+	},
 	locale: locale || "en-us",
 	config: {
 		"requirejs-dplugins/has": {

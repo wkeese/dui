@@ -10,7 +10,6 @@ define({
 	// The port on which the instrumenting proxy will listen
 	proxyPort: 9000,
 
-
 	// Browsers to run integration testing against. Note that version numbers must be strings if used with Sauce
 	// OnDemand. Options that will be permutated are browserName, version, platform, and platformVersion; any other
 	// capabilities options specified for an environment will be copied as-is
@@ -42,7 +41,15 @@ define({
 	},
 
 	loader: {
-		baseUrl: typeof window !== "undefined" ? "../../.." : ".."
+		baseUrl: typeof window !== "undefined" ? "../../.." : "..",
+		packages: [
+			{name: "jquery", location: "jquery/src"}
+		],
+		map: {
+			jquery: {
+				"jquery/selector": "jquery/selector-native"	// don't pull in sizzle
+			}
+		}
 	},
 	useLoader: {
 		"host-node": "requirejs",
@@ -57,5 +64,5 @@ define({
 
 	// A regular expression matching URLs to files that should not be included in code coverage analysis
 	excludeInstrumentation:
-		/^(?:dcl|dojo|dstore|requirejs.*|platform|dpointer|delite\/(tests|node_modules)|.*\/themes)\//
+		/^(?:dcl|dojo|dstore|jquery|requirejs.*|platform|dpointer|delite\/(tests|node_modules)|.*\/themes)\//
 });
