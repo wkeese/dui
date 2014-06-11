@@ -2,15 +2,16 @@
 define([
 	"dcl/dcl",
 	"dojo/Deferred",
-	"dojo/dom-class", // domClass.add domClass.contains domClass.remove
-	"dojo/dom-geometry", // domGeometry.marginBox domGeometry.position
+	"jquery/offset", // offset()
 	"requirejs-dplugins/has", // has("touch")
 	"dojo/keys", // keys.DOWN_ARROW keys.ENTER keys.ESCAPE
 	"./focus",
 	"./popup",
 	"./Widget",
+	"jquery/dimensions",			// outerHeight(), outerWidth()
+	"jquery/attributes/classes",		// addClass(), removeClass(), hasClass()
 	"dpointer/events"
-], function (dcl, Deferred, domClass, domGeometry, has, keys, focus, popup, Widget) {
+], function (dcl, Deferred, $, has, keys, focus, popup, Widget) {
 
 	// TODO: this needs an overhaul for 2.0, including
 	//	- use deferreds instead of callbacks
@@ -183,11 +184,15 @@ define([
 				// because it's so large.  In that case mouse-up shouldn't select a value from the menu.
 				// Find out if our target is somewhere in our dropdown widget,
 				// but not over our _buttonNode (the clickable node)
-				var c = domGeometry.position(this._buttonNode, true);
-				if (!(e.pageX >= c.x && e.pageX <= c.x + c.w) || !(e.pageY >= c.y && e.pageY <= c.y + c.h)) {
+				var offset = $(this._buttonNode).offset(),
+					height = $(this._buttonNode).outerHeight(),
+					width = $(this._buttonNode).outerWidth();
+
+				if (!(e.pageX >= offset.left && e.pageX <= offset.left + width) ||
+						!(e.pageY >= offset.top && e.pageY <= offset.top + height)) {
 					var t = e.target;
 					while (t && !overMenu) {
-						if (domClass.contains(t, "d-popup")) {
+						if ($(t).hasClass("d-popup")) {
 							overMenu = true;
 						} else {
 							t = t.parentNode;
@@ -252,7 +257,7 @@ define([
 				"before": this.isLeftToRight() ? "left" : "right"
 			}[this.dropDownPosition[0]] || this.dropDownPosition[0] || "down";
 
-			domClass.add(this._arrowWrapperNode || this._buttonNode, "d-" + defaultPos + "-arrow");
+			$(this._arrowWrapperNode || this._buttonNode).addClass("d-" + defaultPos + "-arrow");
 		}),
 
 		postCreate: function () {
@@ -432,7 +437,7 @@ define([
 					self.closeDropDown(true);
 				},
 				onClose: function () {
-					domClass.remove(self._popupStateNode, "d-drop-down-open");
+					$(self._popupStateNode).removeClass("d-drop-down-open");
 					self._set("opened", false);	// use _set() because CssStateMixin is watching
 				}
 			});
@@ -440,14 +445,12 @@ define([
 			// Set width of drop down if necessary, so that dropdown width + width of scrollbar (from popup wrapper)
 			// matches width of aroundNode
 			if (this.forceWidth || (this.autoWidth && aroundNode.offsetWidth > dropDown._popupWrapper.offsetWidth)) {
-				var widthAdjust = aroundNode.offsetWidth - dropDown._popupWrapper.offsetWidth;
-				var resizeArgs = {
-					w: dropDown.offsetWidth + widthAdjust
-				};
+				var widthAdjust = aroundNode.offsetWidth - dropDown._popupWrapper.offsetWidth,
+					width = dropDown.offsetWidth + widthAdjust;
 				if (typeof dropDown.resize === "function") {
-					dropDown.resize(resizeArgs);
+					dropDown.resize({w: width});
 				} else {
-					domGeometry.setMarginBox(dropDown, resizeArgs);
+					$(dropDown).outerWidth(width);
 				}
 
 				// If dropdown is right-aligned then compensate for width change by changing horizontal position
@@ -457,7 +460,7 @@ define([
 				}
 			}
 
-			domClass.add(this._popupStateNode, "d-drop-down-open");
+			$(this._popupStateNode).addClass("d-drop-down-open");
 			this._set("opened", true);	// use set() because _CssStateMixin is watching
 
 			this._popupStateNode.setAttribute("aria-expanded", "true");

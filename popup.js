@@ -5,14 +5,14 @@
 define([
 	"dcl/advise",
 	"dcl/dcl",
-	"dojo/dom-geometry", // domGeometry.position
+	"jquery/offset", // offset()
 	"requirejs-dplugins/has", // has("config-bgIframe")
 	"dojo/keys",
 	"./place",
 	"./BackgroundIframe",
 	"./Viewport",
 	"./theme!" // d-popup class
-], function (advise, dcl, domGeometry, has, keys, place, BackgroundIframe, Viewport) {
+], function (advise, dcl, $, has, keys, on, place, BackgroundIframe, Viewport) {
 
 	function isDocLtr(doc) {
 		return !(/^rtl$/i).test(doc.body.dir || doc.documentElement.dir);
@@ -24,11 +24,11 @@ define([
 	 * @property {module:delite/Widget} popup - The Widget to display.
 	 * @property {module:delite/Widget} parent - The button etc. that is displaying this popup.
 	 * @property {Element|Rectangle} around - DOM node (typically a button);
-	 * place popup relative to this node.  (Specify this *or* `x` and `y` properties.)
-	 * @property {number} x - Absolute horizontal position (in pixels) to place node at.
-	 * (Specify this *or* `around` parameter.)
-	 * @property {number} y - Absolute vertical position (in pixels) to place node at.
-	 * (Specify this *or* `around` parameter.)
+	 * place popup relative to this node.  Specify this *or* `x` and `y` properties.
+	 * @property {number} x - Absolute horizontal position (in pixels) to place node at,
+	 * relative to document.  Specify this *or* `around` property.
+	 * @property {number} y - Absolute vertical position (in pixels) to place node at,
+	 * relative to document.  Specify this *or* `around` property.
 	 * @property {string[]} orient - When the `around` parameter is specified, `orient` should be a
 	 * list of positions to try, ex. `[ "below", "above" ]`
 	 * delite/popup.open() tries to position the popup according to each specified position, in order,
@@ -86,9 +86,9 @@ define([
 		_repositionAll: function () {
 			if (this._firstAroundNode) {	// guard for when clearTimeout() on IE doesn't work
 				var oldPos = this._firstAroundPosition,
-					newPos = domGeometry.position(this._firstAroundNode, true),
-					dx = newPos.x - oldPos.x,
-					dy = newPos.y - oldPos.y;
+					newPos = $(this._firstAroundNode).offset(),
+					dx = newPos.left - oldPos.left,
+					dy = newPos.top - oldPos.top;
 
 				if (dx || dy) {
 					this._firstAroundPosition = newPos;
@@ -260,18 +260,19 @@ define([
 			// Limit height to space available in viewport either above or below aroundNode (whichever side has more
 			// room), adding scrollbar if necessary. Can't add scrollbar to widget because it may be a <table> (ex:
 			// deliteful/Menu), so add to wrapper, and then move popup's border to wrapper so scroll bar inside border.
-			var maxHeight, popupSize = domGeometry.position(widget);
+			var maxHeight, popupHeight = widget.offsetHeight;
 			if ("maxHeight" in args && args.maxHeight !== -1) {
 				maxHeight = args.maxHeight || Infinity;
 			} else {
 				var viewport = Viewport.getEffectiveBox(widget.ownerDocument),
-					aroundPos = around ? domGeometry.position(around, false) : {
-						y: args.y - (args.padding || 0),
-						h: (args.padding || 0) * 2
+					aroundOffset = around && $(around).offset(),
+					aroundPos = {	// y position in *viewport*, not in document, plus height
+						y: aroundOffset ? aroundOffset.top - viewport.t : args.y - (args.padding || 0),
+						h: around ? around.offsetHeight : (args.padding || 0) * 2
 					};
 				maxHeight = Math.floor(Math.max(aroundPos.y, viewport.h - (aroundPos.y + aroundPos.h)));
 			}
-			if (popupSize.h > maxHeight) {
+			if (popupHeight > maxHeight) {
 				// Get style of popup's border.  Unfortunately getComputedStyle(node).border doesn't work on FF or IE,
 				// and getComputedStyle(node).borderColor etc. doesn't work on FF, so need to use fully qualified names.
 				var cs = getComputedStyle(widget),
@@ -295,7 +296,7 @@ define([
 			if (stack.length === 0 && around) {
 				// First element on stack. Save position of aroundNode and setup listener for changes to that position.
 				this._firstAroundNode = around;
-				this._firstAroundPosition = domGeometry.position(around, true);
+				this._firstAroundPosition = $(around).offset();
 				this._aroundMoveListener = setTimeout(this._repositionAll.bind(this), 50);
 			}
 

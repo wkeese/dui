@@ -1,9 +1,10 @@
 /** @module delite/CssState */
 define([
 	"dcl/dcl",
-	"dojo/dom-class", // domClass.toggle
-	"./Widget"
-], function (dcl, domClass, Widget) {
+	"jquery/core",
+	"./Widget",
+	"jquery/attributes/classes"	// addClass(), removeClass()
+], function (dcl, $, Widget) {
 
 	/**
 	 * Update the visual state of the widget by setting CSS classes on widget root node
@@ -31,22 +32,19 @@ define([
 		booleanCssProps: ["disabled", "readOnly", "selected", "focused", "opened"],
 
 		postCreate: function () {
-			var toggle = domClass.toggle.bind(domClass, this);
-
 			// Monitoring changes to disabled, readonly, etc. state, and update CSS class of root node
 			this.booleanCssProps.forEach(function (name) {
 				this.watch(name, function (name, oval, nval) {
-					toggle("d-" + name.toLowerCase(), nval);
-				});
+					$(this).toggleClass("d-" + name.toLowerCase(), nval);
+				}.bind(this));
 			}, this);
 			this.watch("checked", function (name, oval, nval) {
-				toggle(oval === "mixed" ? "d-mixed" : "d-checked", false);
-				toggle(nval === "mixed" ? "d-mixed" : "d-checked", nval);
-			});
+				$(this).removeClass(oval === "mixed" ? "d-mixed" : "d-checked")
+					.addClass(nval === "mixed" ? "d-mixed" : nval ? "d-checked": "");
+			}.bind(this));
 			this.watch("state", function (name, oval, nval) {
-				toggle("d-" + oval.toLowerCase(), false);
-				toggle("d-" + nval.toLowerCase(), true);
-			});
+				$(this).removeClass("d-" + oval.toLowerCase()).addClass("d-" + nval.toLowerCase());
+			}.bind(this));
 		}
 	});
 });

@@ -16,11 +16,12 @@
 define([
 	"dcl/advise",
 	"dcl/dcl",
-	"dojo/dom-class",
+	"jquery/core",
 	"dojo/Evented",
+	"jquery/attributes/classes",	// hasClass()
 	"dpointer/events",		// so can just monitor for "pointerdown"
 	"requirejs-domready/domReady!"
-], function (advise, dcl, domClass, Evented) {
+], function (advise, dcl, $, Evented) {
 
 	// Time of the last focusin event
 	var lastFocusin;
@@ -172,7 +173,7 @@ define([
 
 			// if the click occurred on the scrollbar of a dropdown, treat it as a click on the dropdown,
 			// even though the scrollbar is technically on the popup wrapper (see #10631)
-			if (domClass.contains(node, "d-popup")) {
+			if ($(node).hasClass("d-popup")) {
 				node = node.firstChild;
 			}
 

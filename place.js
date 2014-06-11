@@ -3,9 +3,10 @@
  * @module delite/place
  */
 define([
-	"dojo/dom-geometry", // domGeometry.position
-	"./Viewport" // getEffectiveBox
-], function (domGeometry, Viewport) {
+	"jquery/offset",	// offset()
+	"./Viewport", // getEffectiveBox
+	"jquery/dimensions"			// outerHeight(), outerWidth()
+], function ($, Viewport) {
 
 	/**
 	 * @typedef {Object} module:delite/place.Position
@@ -135,7 +136,8 @@ define([
 				style.visibility = "hidden";
 				style.display = "";
 			}
-			var bb = domGeometry.position(node);
+			var nodeHeight = $(node).outerHeight(),
+				nodeWidth = $(node).outerWidth();
 			style.display = oldDisplay;
 			style.visibility = oldVis;
 
@@ -144,23 +146,23 @@ define([
 			var
 				startXpos = {
 					"L": pos.x,
-					"R": pos.x - bb.w,
+					"R": pos.x - nodeWidth,
 					// M orientation is more flexible
-					"M": Math.max(view.l, Math.min(view.l + view.w, pos.x + (bb.w >> 1)) - bb.w)
+					"M": Math.max(view.l, Math.min(view.l + view.w, pos.x + (nodeWidth >> 1)) - nodeWidth)
 				}[corner.charAt(1)],
 				startYpos = {
 					"T": pos.y,
-					"B": pos.y - bb.h,
-					"M": Math.max(view.t, Math.min(view.t + view.h, pos.y + (bb.h >> 1)) - bb.h)
+					"B": pos.y - nodeHeight,
+					"M": Math.max(view.t, Math.min(view.t + view.h, pos.y + (nodeHeight >> 1)) - nodeHeight)
 				}[corner.charAt(0)],
 				startX = Math.max(view.l, startXpos),
 				startY = Math.max(view.t, startYpos),
-				endX = Math.min(view.l + view.w, startXpos + bb.w),
-				endY = Math.min(view.t + view.h, startYpos + bb.h),
-				width = endX - startX,
-				height = endY - startY;
+				endX = Math.min(view.l + view.w, startXpos + nodeWidth),
+				endY = Math.min(view.t + view.h, startYpos + nodeHeight),
+				clippedWidth = endX - startX,
+				clippedHeight = endY - startY;
 
-			overflow += (bb.w - width) + (bb.h - height);
+			overflow += (nodeWidth - clippedWidth) + (nodeHeight - clippedHeight);
 
 			if (best == null || overflow < best.overflow) {
 				best = {
@@ -168,8 +170,8 @@ define([
 					aroundCorner: choice.aroundCorner,
 					x: startX,
 					y: startY,
-					w: width,
-					h: height,
+					w: clippedWidth,
+					h: clippedHeight,
 					overflow: overflow,
 					spaceAvailable: spaceAvailable
 				};
@@ -304,18 +306,29 @@ define([
 			// If around is a DOMNode (or DOMNode id), convert to coordinates.
 			var aroundNodePos;
 			if (typeof anchor === "string" || "offsetWidth" in anchor || "ownerSVGElement" in anchor) {
-				aroundNodePos = domGeometry.position(anchor, true);
+				var aroundNodeOffset = $(anchor).offset();
+				aroundNodePos = {
+					x: aroundNodeOffset.left,
+					y: aroundNodeOffset.top,
+					w: $(anchor).outerWidth(),
+					h: $(anchor).outerHeight()
+				};
 
 				// For above and below dropdowns, subtract width of border so that popup and aroundNode borders
 				// overlap, preventing a double-border effect.  Unfortunately, difficult to measure the border
 				// width of either anchor or popup because in both cases the border may be on an inner node.
 				if (/^(above|below)/.test(positions[0])) {
-					var anchorBorder = domGeometry.getBorderExtents(anchor),
-						anchorChildBorder = anchor.firstChild ? domGeometry.getBorderExtents(anchor.firstChild) :
-							{t: 0, l: 0, b: 0, r: 0},
-						nodeBorder = domGeometry.getBorderExtents(node),
-						nodeChildBorder = node.firstChild ? domGeometry.getBorderExtents(node.firstChild) :
-							{t: 0, l: 0, b: 0, r: 0};
+					var border = function (node) {
+						var cs = getComputedStyle(node);
+						return {
+							t: parseFloat(cs.borderTopWidth),	// remove "px"
+							b: parseFloat(cs.borderBottomWidth)	// remove "px"
+						};
+					};
+					var anchorBorder = border(anchor),
+						anchorChildBorder = anchor.firstElementChild ? border(anchor.firstElementChild) : {t: 0, b: 0},
+						nodeBorder = border(node),
+						nodeChildBorder = node.firstElementChild ? border(node.firstElementChild) : {t: 0, b: 0};
 					aroundNodePos.y += Math.min(anchorBorder.t + anchorChildBorder.t,
 						nodeBorder.t + nodeChildBorder.t);
 					aroundNodePos.h -= Math.min(anchorBorder.t + anchorChildBorder.t,
@@ -334,16 +347,18 @@ define([
 				var parent = anchor.parentNode;
 				// ignoring the body will help performance
 				while (parent && parent.nodeType === 1 && parent.nodeName !== "BODY") {
-					var parentPos = domGeometry.position(parent, true),
+					var parentOff = $(parent).offset(),
+						parentHeight = $(parent).outerHeight(),
+						parentWidth = $(parent).outerWidth(),
 						pcs = getComputedStyle(parent);
 					if (/^(relative|absolute)$/.test(pcs.position)) {
 						sawPosAbsolute = false;
 					}
 					if (!sawPosAbsolute && /^(hidden|auto|scroll)$/.test(pcs.overflow)) {
-						var bottomYCoord = Math.min(aroundNodePos.y + aroundNodePos.h, parentPos.y + parentPos.h);
-						var rightXCoord = Math.min(aroundNodePos.x + aroundNodePos.w, parentPos.x + parentPos.w);
-						aroundNodePos.x = Math.max(aroundNodePos.x, parentPos.x);
-						aroundNodePos.y = Math.max(aroundNodePos.y, parentPos.y);
+						var bottomYCoord = Math.min(aroundNodePos.y + aroundNodePos.h, parentOff.top + parentHeight);
+						var rightXCoord = Math.min(aroundNodePos.x + aroundNodePos.w, parentOff.left + parentWidth);
+						aroundNodePos.x = Math.max(aroundNodePos.x, parentOff.left);
+						aroundNodePos.y = Math.max(aroundNodePos.y, parentOff.top);
 						aroundNodePos.h = bottomYCoord - aroundNodePos.y;
 						aroundNodePos.w = rightXCoord - aroundNodePos.x;
 					}

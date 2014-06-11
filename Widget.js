@@ -1,13 +1,13 @@
 /** @module delite/Widget */
 define([
 	"dcl/dcl",
-	"dojo/dom", // dom.byId
-	"dojo/dom-class", // domClass.add domClass.replace
+	"jquery/core",
 	"requirejs-dplugins/has",
 	"./CustomElement",
 	"./register",
-	"requirejs-dplugins/has!bidi?./Bidi"
-], function (dcl, dom, domClass, has, CustomElement, register, Bidi) {
+	"requirejs-dplugins/has!bidi?./Bidi",
+	"jquery/attributes/classes"	// addClass(), removeClass()
+], function (dcl, $, has, CustomElement, register, Bidi) {
 	// Flag to enable support for textdir attribute
 	has.add("bidi", false);
 
@@ -32,7 +32,7 @@ define([
 		 */
 		baseClass: "",
 		_setBaseClassAttr: function (value) {
-			domClass.replace(this, value, this.baseClass);
+			$(this).removeClass(this.baseClass).addClass(value);
 			this._set("baseClass", value);
 		},
 
@@ -114,10 +114,10 @@ define([
 			// When Widget extends Invalidating some/all of this code should probably be moved to refreshRendering()
 
 			if (this.baseClass) {
-				domClass.add(this, this.baseClass);
+				$(this).addClass(this.baseClass);
 			}
 			if (!this.isLeftToRight()) {
-				domClass.add(this, "d-rtl");
+				$(this).addClass("d-rtl");
 			}
 
 			// Since safari masks all custom setters for tabIndex on the prototype, call them here manually.
