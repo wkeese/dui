@@ -147,11 +147,11 @@ define([
 			store.store = myStore;
 			return d;
 		},
-		"StoreFuncRange": function () {
+		"StoreFuncFetchRange": function () {
 			var d = this.async(1500);
 			var store = new C();
 			store.processQueryResult = function (store) {
-				return store.range(1);
+				return store.fetchRange({start: 1, end: 2})
 			};
 			var myData = [
 				{ id: "foo", name: "Foo" },
