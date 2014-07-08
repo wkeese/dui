@@ -1,11 +1,10 @@
 /** @module delite/KeyNav */
 define([
 	"dcl/dcl",
-	"dojo/keys", // keys.END keys.HOME, keys.LEFT_ARROW etc.
 	"requirejs-dplugins/has",
 	"./Widget",
 	"./focus"	// causes _onBlur() to be called when focus removed from KeyNav and logical descendants
-], function (dcl, keys, has, Widget) {
+], function (dcl, has, Widget) {
 
 	// Returns the name of the method to test if an element matches a CSS selector.
 	has.add("dom-matches", function () {
@@ -121,16 +120,16 @@ define([
 
 			if (!this._keyNavCodes) {
 				var keyCodes = this._keyNavCodes = {};
-				keyCodes[keys.HOME] = function () {
+				keyCodes[36 /*HOME*/] = function () {
 					self.focusFirstChild();
 				};
-				keyCodes[keys.END] = function () {
+				keyCodes[35 /*END*/] = function () {
 					self.focusLastChild();
 				};
-				keyCodes[this.isLeftToRight() ? keys.LEFT_ARROW : keys.RIGHT_ARROW] = this._onLeftArrow.bind(this);
-				keyCodes[this.isLeftToRight() ? keys.RIGHT_ARROW : keys.LEFT_ARROW] = this._onRightArrow.bind(this);
-				keyCodes[keys.UP_ARROW] = this._onUpArrow.bind(this);
-				keyCodes[keys.DOWN_ARROW] = this._onDownArrow.bind(this);
+				keyCodes[this.isLeftToRight() ? 37 /*LEFT_ARROW*/ : 39 /*RIGHT_ARROW*/] = this._onLeftArrow.bind(this);
+				keyCodes[this.isLeftToRight() ? 39 /*RIGHT_ARROW*/ : 37 /*LEFT_ARROW*/] = this._onRightArrow.bind(this);
+				keyCodes[38 /*UP_ARROW*/] = this._onUpArrow.bind(this);
+				keyCodes[40 /*DOWN_ARROW*/] = this._onDownArrow.bind(this);
 			}
 
 			this.on("keypress", this._onContainerKeypress.bind(this)),
@@ -351,8 +350,8 @@ define([
 		_onContainerKeydown: function (evt) {
 			// Ignore left, right, home, and end on <input> controls
 			if (takesInput(evt.target) &&
-				(evt.keyCode === keys.LEFT_ARROW || evt.keyCode === keys.RIGHT_ARROW ||
-					evt.keyCode === keys.HOME || evt.keyCode === keys.END)) {
+				(evt.keyCode === 37 /*LEFT_ARROW*/ || evt.keyCode === 39 /*RIGHT_ARROW*/ ||
+					evt.keyCode === 36 /*HOME*/ || evt.keyCode === 35 /*END*/)) {
 				return;
 			}
 				
@@ -362,7 +361,8 @@ define([
 				evt.stopPropagation();
 				evt.preventDefault();
 				this._searchString = ""; // so a DOWN_ARROW b doesn't search for ab
-			} else if (evt.keyCode === keys.SPACE && this._searchTimer && !(evt.ctrlKey || evt.altKey || evt.metaKey)) {
+			} else if (evt.keyCode === 32 /*SPACE*/ && this._searchTimer && 
+					!(evt.ctrlKey || evt.altKey || evt.metaKey)) {
 				// Stop a11yclick from interpreting key as a click event.
 				// Also stop IE from scrolling, and most browsers (except FF) from sending keypress.
 				evt.preventDefault();
@@ -385,12 +385,12 @@ define([
 			//
 			// Note: if there's no search in progress, then SPACE should be ignored.   If there is a search
 			// in progress, then SPACE is handled in _onContainerKeyDown.
-			if (takesInput(evt.target) || evt.charCode <= keys.SPACE || evt.ctrlKey || evt.altKey || evt.metaKey) {
+			if (takesInput(evt.target) || evt.charCode <= 32 /*SPACE*/ || evt.ctrlKey || evt.altKey || evt.metaKey) {
 				return;
 			}
 
 			if (/^(checkbox|radio)$/.test(evt.target.type) &&
-				(evt.charCode === keys.SPACE || evt.charCode === keys.ENTER)) {
+				(evt.charCode === 32 /*SPACE*/ || evt.charCode === 13 /*ENTER*/)) {
 				// Ignore keyboard clicks on checkbox controls
 				return;
 			}

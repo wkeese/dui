@@ -4,14 +4,13 @@ define([
 	"dojo/Deferred",
 	"jquery/offset", // offset()
 	"requirejs-dplugins/has", // has("touch")
-	"dojo/keys", // keys.DOWN_ARROW keys.ENTER keys.ESCAPE
 	"./focus",
 	"./popup",
 	"./Widget",
 	"jquery/dimensions",			// outerHeight(), outerWidth()
 	"jquery/attributes/classes",		// addClass(), removeClass(), hasClass()
 	"dpointer/events"
-], function (dcl, Deferred, $, has, keys, focus, popup, Widget) {
+], function (dcl, Deferred, $, has, focus, popup, Widget) {
 
 	// TODO: this needs an overhaul for 2.0, including
 	//	- use deferreds instead of callbacks
@@ -304,14 +303,14 @@ define([
 					return;
 				}
 			}
-			if (d && this.opened && e.keyCode === keys.ESCAPE) {
+			if (d && this.opened && e.keyCode === 27 /* ESCAPE */) {
 				this.closeDropDown();
 				e.stopPropagation();
 				e.preventDefault();
 			} else if (!this.opened &&
-				(e.keyCode === keys.DOWN_ARROW ||
+				(e.keyCode === 40 /* DOWN_ARROW */ ||
 					// ignore unmodified SPACE if KeyNav has search in progress
-					((e.keyCode === keys.ENTER || (e.keyCode === keys.SPACE &&
+					((e.keyCode === 13 /* ENTER */ || (e.keyCode === 32 /* SPACE */ &&
 						(!this._searchTimer || (e.ctrlKey || e.altKey || e.metaKey)))) &&
 						//ignore enter and space if the event is for a text input
 						((target.tagName || "").toLowerCase() !== "input" ||

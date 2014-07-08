@@ -1,9 +1,7 @@
 /**
   * @module delite/a11yclick
  */
-define([
-	"dojo/keys" // keys.ENTER keys.SPACE
-], function (keys) {
+define([], function () {
 
 	// TODO: add functional tests
 
@@ -12,7 +10,7 @@ define([
 		// Only track for nodes marked to be tracked, and not for buttons or inputs,
 		// since buttons handle keyboard click natively, and text inputs should not
 		// prevent typing spaces or newlines.
-		if ((e.keyCode === keys.ENTER || e.keyCode === keys.SPACE) &&
+		if ((e.keyCode === 13 /* ENTER */ || e.keyCode === 32 /* SPACE */ ) &&
 				!/input|button|textarea/i.test(e.target.nodeName)) {
 
 			// Test if a node or its ancestor has been marked with the d-keyboard-click property

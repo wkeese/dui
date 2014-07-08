@@ -7,12 +7,11 @@ define([
 	"dcl/dcl",
 	"jquery/offset", // offset()
 	"requirejs-dplugins/has", // has("config-bgIframe")
-	"dojo/keys",
 	"./place",
 	"./BackgroundIframe",
 	"./Viewport",
 	"./theme!" // d-popup class
-], function (advise, dcl, $, has, keys, on, place, BackgroundIframe, Viewport) {
+], function (advise, dcl, $, has, place, BackgroundIframe, Viewport) {
 
 	function isDocLtr(doc) {
 		return !(/^rtl$/i).test(doc.body.dir || doc.documentElement.dir);
@@ -320,11 +319,11 @@ define([
 			// provide default escape and tab key handling
 			// (this will work for any widget, not just menu)
 			function onKeyDown(evt) {
-				if (evt.keyCode === keys.ESCAPE && args.onCancel) {
+				if (evt.keyCode === 27 /*ESCAPE*/ && args.onCancel) {
 					evt.stopPropagation();
 					evt.preventDefault();
 					args.onCancel();
-				} else if (evt.keyCode === keys.TAB) {
+				} else if (evt.keyCode === 9 /*TAB*/) {
 					evt.stopPropagation();
 					evt.preventDefault();
 					var topPopup = this.getTopPopup();
