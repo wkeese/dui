@@ -1,16 +1,16 @@
 /** @module delite/HasDropDown */
 define([
 	"dcl/dcl",
-	"dojo/Deferred",
-	"jquery/offset", // offset()
+	"jquery/deferred",
 	"requirejs-dplugins/has", // has("touch")
 	"./focus",
 	"./popup",
 	"./Widget",
 	"jquery/dimensions",			// outerHeight(), outerWidth()
+	"jquery/offset", // offset()
 	"jquery/attributes/classes",		// addClass(), removeClass(), hasClass()
 	"dpointer/events"
-], function (dcl, Deferred, $, has, focus, popup, Widget) {
+], function (dcl, $, has, focus, popup, Widget) {
 
 	// TODO: this needs an overhaul for 2.0, including
 	//	- use deferreds instead of callbacks
@@ -380,7 +380,7 @@ define([
 		 * @protected
 		 */
 		loadAndOpenDropDown: function () {
-			var d = new Deferred();
+			var d = $.Deferred();
 
 			function afterLoad() {
 				this.openDropDown();

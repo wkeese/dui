@@ -1,5 +1,5 @@
 /** @module delite/Store */
-define(["dcl/dcl", "dojo/when", "./Invalidating"], function (dcl, when, Invalidating) {
+define(["dcl/dcl", "jquery/deferred", "./Invalidating"], function (dcl, $, Invalidating) {
 
 	var isStoreInvalidated = function (props) {
 		return props.store || props.query;
@@ -146,7 +146,7 @@ define(["dcl/dcl", "dojo/when", "./Invalidating"], function (dcl, when, Invalida
 		 * @param {dstore/Collection} collection - Items to be displayed.
 		 */
 		fetch: function (collection) {
-			return when(collection.map(function (item) {
+			return $.when(collection.map(function (item) {
 				// if we have a mapping function between store item and some intermediary items use it
 				return this.itemToRenderItem(item);
 			}, this)).then(this.initItems.bind(this), this._queryError.bind(this));
