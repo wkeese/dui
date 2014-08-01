@@ -1,5 +1,5 @@
 /** @module delite/StoreMap */
-define(["dcl/dcl", "./Store"], function (dcl, Store) {
+define(["dcl/dcl", "./attr", "./Store"], function (dcl, attr, Store) {
 
 	var getvalue = function (map, item, key, store) {
 		if (map[key + "Func"]) {
@@ -93,7 +93,7 @@ define(["dcl/dcl", "./Store"], function (dcl, Store) {
 					return {
 						prop: name,
 						value: /Attr$/.test(name) ? value :
-							this._parseFunctionAttr(value, ["item", "store", "value"])
+							attr.parseFunction(value, ["item", "store", "value"])
 					};
 				} else {
 					return sup.apply(this, arguments);
