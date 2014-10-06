@@ -30,12 +30,11 @@ define([
 	  * - Implement `onLeftArrow()`, `onRightArrow()``onDownArrow()`, `onUpArrow()` methods to handle
 	  *   left/right/up/down keystrokes.
 	  * - Set all navigable descendants' initial tabIndex to "-1"; both initial descendants and any
-	  * descendants added later, by for example `addChild()`.
-	  * - Define `descendantSelector` as a function or string that identifies focusable child Elements.
-	  * 
-	  * Note the word "child" in this class is used loosely, to refer to any descendant Element.
-	  * If the child elements contain text though, they should have a label attribute.  KeyNav uses the label
-	  * attribute for letter key navigation.
+	  *   descendants added later, by for example `addChild()`.  Exception: if `focusDescendants` is false then the
+	  *   descendants shouldn't have any tabIndex at all.
+	  * - Define `descendantSelector` as a function or string that identifies navigable child Elements.
+	  * - If the descendant elements contain text, they should have a label attribute.  KeyNav uses the label
+	  *   attribute for letter key navigation.
 	  *
 	  * @mixin module:delite/KeyNav
 	  * @augments module:delite/Widget
