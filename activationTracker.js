@@ -23,6 +23,8 @@ define([
 	"requirejs-domready/domReady!"
 ], function (advise, dcl, domClass, Evented) {
 
+	atLog = [];
+
 	// Time of the last touch/mouse and focusin events
 	var lastPointerDownTime;
 	var lastFocusinTime;
@@ -74,6 +76,8 @@ define([
 				body = doc && doc.body;
 
 			function pointerDownHandler(evt) {
+				var node = evt.target;
+				atLog.push("pointerdown on " + (node.id ||node.tagName))
 				// workaround weird IE bug where the click is on an orphaned node
 				// (first time clicking a Select/DropDownButton inside a TooltipDialog).
 				// actually, strangely this is happening on latest chrome too.
@@ -108,13 +112,13 @@ define([
 
 			if (body) {
 				// Listen for touches or mousedowns.
-				doc.addEventListener("pointerdown", pointerDownHandler, true);
+				body.addEventListener("pointerdown", pointerDownHandler, true);
 				body.addEventListener("focus", focusHandler, true);	// need true since focus doesn't bubble
 				body.addEventListener("blur", blurHandler, true);	// need true since blur doesn't bubble
 
 				return {
 					remove: function () {
-						doc.removeEventListener("pointerdown", pointerDownHandler, true);
+						body.removeEventListener("pointerdown", pointerDownHandler, true);
 						body.removeEventListener("focus", focusHandler, true);
 						body.removeEventListener("blur", blurHandler, true);
 					}
@@ -133,7 +137,7 @@ define([
 		_blurHandler: function (node) { // jshint unused: vars
 			var now = (new Date()).getTime();
 
-			console.log("blur on " + (node.id ||node.tagName))
+			atLog.push("blur on " + (node.id ||node.tagName))
 			// IE9+ and chrome have a problem where focusout events come after the corresponding focusin event.
 			// For chrome problem see https://bugs.dojotoolkit.org/ticket/17668.
 			// IE problem happens when moving focus from the Editor's <iframe> to a normal DOMNode.
@@ -172,7 +176,6 @@ define([
 			lastPointerDownOrFocusInTime = (new Date()).getTime();
 			lastPointerDownOrFocusInNode = node;
 
-			console.log("poitnerodown or foucus on " + (node.id ||node.tagName))
 			if (this._clearActiveWidgetsTimer) {
 				// forget the recent blur event
 				clearTimeout(this._clearActiveWidgetsTimer);
@@ -216,7 +219,7 @@ define([
 		 * @private
 		 */
 		_focusHandler: function (node) {
-			console.log("focus on " + (node.id ||node.tagName))
+			atLog.push("focus2 on " + (node.id ||node.tagName))
 			if (!node) {
 				return;
 			}
@@ -234,8 +237,9 @@ define([
 			// Also, if clicking a node causes its ancestor to be focused, ignore the focus event.
 			// Example in the activationTracker.html functional test on IE, where clicking the spinner buttons
 			// focuses the <fieldset> holding the spinner.
-			if ((new Date()).getTime() < lastPointerDownTime + 100 && node.contains(lastPointerDownOrFocusInNode)) {
-				console.log("skip focus event on " + node.tagName);
+			if ((new Date()).getTime() < lastPointerDownTime + 100 &&
+					node.contains(lastPointerDownOrFocusInNode.parentNode)) {
+				atLog.push("skip focus event on " + node.tagName);
 				return;
 			}
 

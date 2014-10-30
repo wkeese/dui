@@ -67,6 +67,9 @@ define([
 				// clicking spinner buttons should activate the spinner, even
 				// though there's no actual DOM focus event
 				.findByCssSelector("fake-spinner .button").click().end()
+				.execute("return atLog;").then(function(log){
+					console.log("atLog:\n" + log.join("\n"));
+				})
 				.findById("activeStack").getProperty("value").then(function (activeStack) {
 					assert.strictEqual(activeStack, "form, fieldset2, spinner", "activeStack #5");
 				}).end();
