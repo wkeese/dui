@@ -173,11 +173,12 @@
 			ready = true;
 		});
 
-		function clear() {
+		function clearLog() {
 			setTimeout(function () {
 				activeStack.value = "";
 				activeStackChangeNotifications.value = 0;
-			}, 0);
+				log.value = "";
+			}, 50);
 		}
 	</script>
 </head>
@@ -225,8 +226,8 @@
 		<button id="dropdownButton" type="button" is="fake-dropdown-button">show dropdown</button>
 		<button tabIndex="-1" id="minusOne" type="button">non tab-navigable button</button>
 		<button id="disabledButton" type="button" disabled>disabled button</button>
-		<button id="clearButton" type="button" onclick="clear();">clear log</button>
 	</form>
 	<label for="log">Log:</label> <textarea id="log" disabled></textarea>
+	<button id="clearButton" type="button" onclick="clearLog();">clear log</button>
 </body>
 </html>
