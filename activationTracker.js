@@ -23,8 +23,6 @@ define([
 	"requirejs-domready/domReady!"
 ], function (advise, dcl, domClass, Evented) {
 
-	atLog = [];
-
 	// Time of the last touch/mouse and focusin events
 	var lastPointerDownTime;
 	var lastFocusinTime;
@@ -77,7 +75,6 @@ define([
 
 			function pointerDownHandler(evt) {
 				var node = evt.target;
-				atLog.push("pointerdown on " + (node.id ||node.tagName))
 				// workaround weird IE bug where the click is on an orphaned node
 				// (first time clicking a Select/DropDownButton inside a TooltipDialog).
 				// actually, strangely this is happening on latest chrome too.
@@ -137,7 +134,6 @@ define([
 		_blurHandler: function (node) { // jshint unused: vars
 			var now = (new Date()).getTime();
 
-			atLog.push("blur on " + (node.id ||node.tagName))
 			// IE9+ and chrome have a problem where focusout events come after the corresponding focusin event.
 			// For chrome problem see https://bugs.dojotoolkit.org/ticket/17668.
 			// IE problem happens when moving focus from the Editor's <iframe> to a normal DOMNode.
@@ -219,7 +215,6 @@ define([
 		 * @private
 		 */
 		_focusHandler: function (node) {
-			atLog.push("focus2 on " + (node.id ||node.tagName))
 			if (!node) {
 				return;
 			}
@@ -239,7 +234,6 @@ define([
 			// focuses the <fieldset> holding the spinner.
 			if ((new Date()).getTime() < lastPointerDownTime + 100 &&
 					node.contains(lastPointerDownOrFocusInNode.parentNode)) {
-				atLog.push("skip focus event on " + node.tagName);
 				return;
 			}
 
