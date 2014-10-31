@@ -27,6 +27,8 @@ define([
 		basic: function () {
 			this.timeout = intern.config.TEST_TIMEOUT;
 
+			var environmentType = this.remote.environmentType;
+
 			return this.remote
 				.findById("first").click().end()
 				.findById("activeStack").getProperty("value").then(function (activeStack) {
@@ -68,12 +70,20 @@ define([
 				// though there's no actual DOM focus event
 				.findByCssSelector("fake-spinner .button").click().end()
 				.findById("activeStack").getProperty("value").then(function (activeStack) {
+					if (environmentType.browserName === "internet explorer") {
+						// click() doesn't generate pointerdown event on IE10+ and neither does
+						// moveMouseTo().pressMouseButton(1).releaseMouseButton(1).
+						// see https://github.com/theintern/leadfoot/issues/17.
+						return;
+					}
 					assert.strictEqual(activeStack, "form, fieldset2, spinner", "activeStack #5");
 				}).end();
 		},
 
 		dropdown: function () {
 			this.timeout = intern.config.TEST_TIMEOUT;
+
+			var environmentType = this.remote.environmentType;
 
 			return this.remote
 				.findById("dropdownButton").click().end()
@@ -84,6 +94,12 @@ define([
 					.click()
 					.end()
 				.findById("activeStack").getProperty("value").then(function (activeStack) {
+					if (environmentType.browserName === "internet explorer") {
+						// click() doesn't generate pointerdown event on IE10+ and neither does
+						// moveMouseTo().pressMouseButton(1).releaseMouseButton(1).
+						// see https://github.com/theintern/leadfoot/issues/17.
+						return;
+					}
 					assert.strictEqual(activeStack, "form, dropdownButton, popup", "activeStack #1");
 				}).end();
 		}
