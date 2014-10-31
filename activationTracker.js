@@ -74,7 +74,6 @@ define([
 				body = doc && doc.body;
 
 			function pointerDownHandler(evt) {
-				var node = evt.target;
 				// workaround weird IE bug where the click is on an orphaned node
 				// (first time clicking a Select/DropDownButton inside a TooltipDialog).
 				// actually, strangely this is happening on latest chrome too.
