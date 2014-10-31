@@ -37,7 +37,7 @@ define([
 				.findById("log").getProperty("value").then(function (log) {
 					assert.strictEqual(log.trim(), "form activated", "log #1");
 				}).end()
-				.pressKeys(keys.TAB)	// focus another simple input
+				.findById("second").click().end()	// focus another simple input
 				.findById("activeStack").getProperty("value").then(function (activeStack) {
 					assert.strictEqual(activeStack, "form", "activeStack #2");
 				}).end()
@@ -46,7 +46,7 @@ define([
 					// shouldn't have any more events besides the original.
 					assert.strictEqual(log.trim(), "form activated", "log #2");
 				}).end()
-				.pressKeys(keys.TAB)	// focus combobox
+				.findById("combobox").click().end()	// focus combobox
 				.findById("activeStack").getProperty("value").then(function (activeStack) {
 					assert.strictEqual(activeStack, "form, fieldset1, combobox", "activeStack #3");
 				}).end()
@@ -77,6 +77,43 @@ define([
 						return;
 					}
 					assert.strictEqual(activeStack, "form, fieldset2, spinner", "activeStack #5");
+				}).end();
+		},
+
+		keyboard: function () {
+			this.timeout = intern.config.TEST_TIMEOUT;
+
+			if (this.remote.environmentType.brokenSendKeys || !this.remote.environmentType.nativeEvents) {
+				return this.skip("no keyboard support");
+			}
+
+			return this.remote
+				.findById("first").click().end()
+				.findById("activeStack").getProperty("value").then(function (activeStack) {
+					assert.strictEqual(activeStack, "form", "activeStack #1");
+				}).end()
+				.findById("log").getProperty("value").then(function (log) {
+					assert.strictEqual(log.trim(), "form activated", "log #1");
+				}).end()
+				.pressKeys(keys.TAB)	// focus another simple input
+				.findById("activeStack").getProperty("value").then(function (activeStack) {
+					assert.strictEqual(activeStack, "form", "activeStack #2");
+				}).end()
+				.findById("log").getProperty("value").then(function (log) {
+					// Since the deliteful/Form widget didn't leave the focus chain it
+					// shouldn't have any more events besides the original.
+					assert.strictEqual(log.trim(), "form activated", "log #2");
+				}).end()
+				.pressKeys(keys.TAB)	// focus combobox
+				.findById("activeStack").getProperty("value").then(function (activeStack) {
+					assert.strictEqual(activeStack, "form, fieldset1, combobox", "activeStack #3");
+				}).end()
+				.findById("log").getProperty("value").then(function (log) {
+					assert.strictEqual(log.trim(), "form activated\nfieldset1 activated\ncombobox activated", "log #3");
+				}).end()
+				.findById("combobox").click().end()	// focus combobox again to check for duplicate notifications
+				.findById("activeStackChangeNotifications").getProperty("value").then(function (changes) {
+					assert.strictEqual(changes, "2", "activeStack changes #1");
 				}).end();
 		},
 
