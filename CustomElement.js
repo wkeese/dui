@@ -201,8 +201,6 @@ define([
 						attributes: true
 					});
 				}
-
-				this.deliver();
 			}
 		}),
 
