@@ -37,7 +37,7 @@ define([
 		 * @protected
 		 */
 		getInheritedDir: function () {
-			if (has("inherited-dir")) {
+			if (this.attached && has("inherited-dir")) {
 				return window.getComputedStyle(this, null).direction;
 			}
 			return this.ownerDocument.body.dir || this.ownerDocument.documentElement.dir || "ltr";
