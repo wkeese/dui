@@ -43,6 +43,14 @@ define([
 			return this.ownerDocument.body.dir || this.ownerDocument.documentElement.dir || "ltr";
 		},
 
+		attachedCallback: function () {
+			if (has("inherited-dir")) {
+				// Now that the widget is attached to the DOM, need to retrigger computation of effectiveDir
+				this.notifyCurrentValue("dir");
+				this.deliver();
+			}
+		},
+
 		/**
 		 * Returns the right direction of text.
 		 *

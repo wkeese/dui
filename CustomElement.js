@@ -162,6 +162,7 @@ define([
 						this[pa.prop] = pa.value;
 					}
 				}, this);
+				this.deliver();
 			}
 		}),
 
