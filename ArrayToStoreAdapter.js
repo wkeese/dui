@@ -10,14 +10,16 @@ define([
 	/**
 	 * An adapter to use an array in the source of delite/Store.js.
 	 * Created to keep a commun interface with the use of dstore/Store instead of an array.
-	 * @class module:delite/ArrayToStoreAdapter
 	 *
-	 * The arguments to pass to the constructor are :
-	 *   source: Array - the array represented by the adapter.
-	 *   query: the query filter to apply to the source.
-	 *   processQueryResult: function to apply to the source.
+	 * The arguments to pass to the constructor are:
+	 *
+	 * - source: Array - the array represented by the adapter.
+	 * - query: the query filter to apply to the source.
+	 * - processQueryResult: function to apply to the source
+	 *
+	 * @class module:delite/ArrayToStoreAdapter
 	 */
-	return dcl(Evented, /** @lends module:delite/ArrayToStoreAdapter# */{
+	return dcl(Evented, /** @lends module:delite/ArrayToStoreAdapter# */ {
 		constructor: function (args) {
 			this.source = args.source;
 			// affect the callbacks of the observe functions
@@ -38,18 +40,19 @@ define([
 		},
 
 		/**
-		 * Variable to indicate if the source is observable.
-		 * @member: boolean
-		 * @default null
+		 * Indicates if the source is observable.
+		 * @member {boolean}
+		 * @default false
+		 * @readonly
 		 */
-		track: null,
+		track: false,
 
 		/////////////////////////////////////////////////////////////////
 		// Functions dedicated to the Observability of the source
 		/////////////////////////////////////////////////////////////////
 
 		/**
-		 * Function to add an item in the data and pass the good event to the function itemAdded of delite/Store.
+		 * Function to add an item in the data and pass the good event to the function `itemAdded()` of `delite/Store`.
 		 * @param evt
 		 * @returns {{index: *, target: (*|evtUpdated.obj|evtRemoved.obj|evtAdded.obj|host.obj|obj)}}
 		 * @private
@@ -65,7 +68,8 @@ define([
 		},
 
 		/**
-		 * Function to remove an item from the data and pass the good event to the function itemRemoved of delite/Store.
+		 * Function to remove an item from the data and pass the good event to the function `itemRemoved()`
+		 * of `delite/Store`.
 		 * @param evt
 		 * @returns {{previousIndex: (*|number|Number)}}
 		 * @private
@@ -105,7 +109,7 @@ define([
 		},
 
 		/**
-		 * Function to pass the good event to the function itemUpdated of delite/Store.
+		 * Function to pass the good event to the function `itemUpdated()` of `delite/Store`.
 		 * @param evt
 		 * @param idx
 		 * @returns {{index: *, previousIndex: *, target: (*|evtUpdated.obj|evtRemoved.obj|evtAdded.obj|host.obj|obj)}}
@@ -117,7 +121,7 @@ define([
 
 		/**
 		 * Called when a modification is done on the array.
-		 * @param changeRecords - send by the Observe function.
+		 * @param {Array} changeRecords - sent by the Observe function.
 		 */
 		__observeCallbackArray: function (changeRecords) {
 			if (!this._beingDiscarded) {
@@ -160,7 +164,7 @@ define([
 
 		/**
 		 * Called when a modification is done on the items.
-		 * @param changeRecords - send by the Observe function.
+		 * @param {Array} changeRecords - sent by the Observe function.
 		 */
 		__observeCallbackItems: function (changeRecords) {
 			if (!this._beingDiscarded) {
@@ -192,9 +196,9 @@ define([
 		},
 
 		/**
-		 * Called to generate the function that will verify if the item respect the query conditions.
+		 * Generate a function that will test if an item respects the query conditions.
 		 * @param query
-		 * @returns {*}
+		 * @returns {Function}
 		 * @private
 		 */
 		_compileQuery: function (query) {
@@ -217,12 +221,13 @@ define([
 		},
 
 		/**
-		 * Used to reduce _compileQuery complexity.
+		 * Generate a function that will test if an item respects the query conditions, based on a query
+		 * object generated from `dstore/Filter`.
 		 * @param query
-		 * @returns {*}
+		 * @returns {Function}
 		 * @private
 		 */
-		/* jshint maxcomplexity: 12*/
+		/* jshint maxcomplexity: 12 */
 		_compileFilterQuery: function (query) {
 			var prop = query.args[0];
 			var value = query.args[1];
@@ -264,10 +269,10 @@ define([
 		/* jshint maxcomplexity: 10*/
 
 		/**
-		 * Function to test if an array contains all the values in parameter values.
+		 * Test if an array contains all the values in parameter values.
 		 * @param array
 		 * @param values
-		 * @returns {*}
+		 * @returns {boolean}
 		 * @private
 		 */
 		_arrayContains: function (array, values) {
@@ -280,9 +285,9 @@ define([
 		},
 
 		/**
-		 * Synchronously deliver change records to all listeners registered via `observe()`.
+		 * Synchronously emit add/update/delete events for all recent changes.
 		 */
-		deliver:  function () {
+		deliver: function () {
 			if (this._arrayHandle) {
 				this._arrayHandle.deliver();
 			}
@@ -292,7 +297,7 @@ define([
 		},
 
 		/**
-		 * Discard change records for all listeners registered via `observe()`.
+		 * Discard recent change records.
 		 */
 		discardChanges: function () {
 			if (this._arrayHandle && this._itemHandles) {
@@ -305,8 +310,7 @@ define([
 		},
 
 		/**
-		 * Function to remove the observability on the array and its items.
-		 * @private
+		 * Stop observing the array and its items.
 		 */
 		untrack: function () {
 			if (this._arrayHandle) {
@@ -325,14 +329,14 @@ define([
 		/////////////////////////////////////////////////////////////////////////
 
 		/**
-		 * Called to perform the fetch operation on the collection.
+		 * Perform the fetch operation on the collection.
 		 */
 		fetch: function () {
 			return Promise.resolve(this.data);
 		},
 
 		/**
-		 * Called to perform the fetchRange operation on the collection.
+		 * Perform the fetchRange operation on the collection.
 		 * @param {Object} args - contains the start index and the end index of the fetch.
 		 */
 		fetchRange: function (args) {
@@ -357,7 +361,7 @@ define([
 		},
 
 		/**
-		 * Retrieves an object in the data by its identity.
+		 * Retrieve an object in the data by its identity.
 		 */
 		get: function (id) {
 			for (var i = 0; i < this.data.length; i++) {
@@ -370,8 +374,8 @@ define([
 
 		/**
 		 * Returns the identity of an item.
-		 * @param {Object} item The item.
-		 * @returns {Object}
+		 * @param {Object} item - The item.
+		 * @returns {*}
 		 */
 		getIdentity: function (item) {
 			return item.id !== undefined ? item.id : this.data.indexOf(item);

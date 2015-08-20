@@ -1,6 +1,5 @@
 /** @module delite/StoreMap */
-define(["dcl/dcl", "requirejs-dplugins/Promise!", "./Store"],
-	function (dcl, Promise, Store) {
+define(["dcl/dcl", "./Store"], function (dcl, Store) {
 
 	var getvalue = function (map, item, key, store) {
 		if (map[key + "Func"]) {
@@ -143,7 +142,6 @@ define(["dcl/dcl", "requirejs-dplugins/Promise!", "./Store"],
 				this.queryStoreAndInitItems(this._pendingQuery, true);
 				this._pendingQuery = null;
 			}
-
 		},
 
 		/**
@@ -201,6 +199,7 @@ define(["dcl/dcl", "requirejs-dplugins/Promise!", "./Store"],
 					}
 				}
 			}
+
 			return renderItem;
 		},
 

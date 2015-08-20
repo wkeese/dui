@@ -34,8 +34,7 @@ define([
 	 *
 	 * @mixin module:delite/Store
 	 */
-	return dcl(Invalidating, /** @lends module:delite/Store# */{
-
+	return dcl(Invalidating, /** @lends module:delite/Store# */ {
 		/**
 		 * The source that contains the items to display.
 		 * @member {(dstore/Store|decor/ObservableArray|Array)}
@@ -196,7 +195,7 @@ define([
 		deliver: dcl.superCall(function (sup) {
 			return function () {
 				sup.call();
-				if (this._storeAdapter && typeof(this._storeAdapter.deliver) === "function") {
+				if (this._storeAdapter && typeof this._storeAdapter.deliver === "function") {
 					this._storeAdapter.deliver();
 				}
 			};
@@ -208,7 +207,7 @@ define([
 		discardChanges: dcl.superCall(function (sup) {
 			return function () {
 				sup.call();
-				if (this._storeAdapter && typeof(this._storeAdapter.discardChanges) === "function") {
+				if (this._storeAdapter && typeof this._storeAdapter.discardChanges === "function") {
 					this._storeAdapter.discardChanges();
 				}
 			};
@@ -382,8 +381,8 @@ define([
 		},
 
 		/**
-		 * Returns the identity of an item.
-		 * @param {Object} item The item
+		 * Return the identity of an item.
+		 * @param {Object} item - The item
 		 * @returns {Object}
 		 * @protected
 		 */
