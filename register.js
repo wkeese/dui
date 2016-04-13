@@ -290,12 +290,10 @@ define([
 
 		// If the document has already been parsed then do a supplementary sweep for this new custom element.
 		if (initialParseComplete && !has("document-register-element")) {
-			unobserve();	// pause listening for added/deleted nodes
 			var node, idx = 0, nodes = doc.querySelectorAll(selector);
 			while ((node = nodes[idx++])) {
 				upgrade(node, true);
 			}
-			observe();	// resume listening for added/deleted nodes
 		}
 
 		return tagConstructor;
@@ -487,7 +485,6 @@ define([
 	 */
 	function processMutations(mutations) {
 		if (!has("document-register-element") && selectors.length) {
-			unobserve();	// pause listening for added/deleted nodes
 			var parseDescendants = has("MutationObserver") || has("DOMNodeInserted") === "root";
 			mutations.forEach(function (mutation) {
 				var added, idx1 = 0;
@@ -519,7 +516,6 @@ define([
 					}
 				}
 			});
-			observe();	// resume listening for added/deleted nodes
 		}
 	}
 
@@ -531,12 +527,11 @@ define([
 	function deliver() {
 		if (!has("document-register-element")) {
 			if (!initialParseComplete) {
+				observe();	// start listening for new nodes added to the document
 				parse();
 				initialParseComplete = true;
-				observe();
-			} else {
-				processMutations(observer.takeRecords());
 			}
+			processMutations(observer.takeRecords());
 		}
 	}
 
@@ -599,6 +594,21 @@ define([
 	 * @function module:delite/register.superCall
 	 */
 	register.superCall = dcl.superCall;
+
+	/**
+	 * Function to manually resume listening for custom elements added to the DOM.
+	 * Not normally called directly.
+	 * Called after `unobserve()`.
+	 * @function module:delite/register.observe
+	 */
+	register.observe = observe;
+
+	/**
+	 * Function to manually pause listening for custom elements added to the DOM.
+	 * Not normally called directly.
+	 * @function module:delite/register.unobserve
+	 */
+	register.unobserve = unobserve;
 
 	return register;
 });
