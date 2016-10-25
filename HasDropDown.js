@@ -153,6 +153,13 @@ define([
 		focusOnKeyboardOpen: true,
 
 		/**
+		 * openOnHover
+		 * @member {boolean}
+		 * @default false
+		 */
+		openOnHover: false,
+
+		/**
 		 * Whether or not the drop down is open.
 		 * @member {boolean}
 		 * @readonly
@@ -327,6 +334,13 @@ define([
 					evt.stopPropagation();
 				}, this.buttonNode)
 			];
+
+			if (this.openOnHover) {
+				this._HasDropDownListeners.push(
+					this.on("delite-hover-activated", this.openDropDown.bind(this), this.buttonNode),
+					this.on("delite-hover-deactivated", this.closeDropDown.bind(this), this.buttonNode)
+				);
+			}
 		},
 
 		detachedCallback: function () {

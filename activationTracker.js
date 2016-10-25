@@ -12,6 +12,30 @@
  * Call `activationTracker.on("deactivated", func)` or `activationTracker.on("activated", ...)` to monitor when
  * when nodes become active/inactive.
  *
+ * ActivationTracker also provides infrastructure for opening/closing popups merely by hovering/unhovering
+ * a button.  Emits `delite-hover-activated` event on nodes that are hovered for `hoverDelay`
+ * milliseconds, and emits `delite-hover-deactivated` event after a node
+ * and its descendants (ex: DropDownButton's descendant is a Tooltip)
+ * have been unhovered for `hoverDelay` milliseconds.  If the user unhovers a node and then re-hovers within
+ * `hoverDelay` milliseconds, there's no `delite-hover-deactivated` event.
+ *
+ * TO IMPLEMENT: Generally, there is a delay between hovering a node and the "delite-hover-activated" event,
+ * If the user hovers a node and then unhovers within the delay, there's no "delite-hover-activated"
+ * event.  However, clicking a node sends the "delite-hover-activated" event to it (and its ancestors)
+ * immediately.
+ *
+ * TO IMPLEMENT: Clicking a blank area of the screen will cause immediate delite-hover-deactivated events
+ * for nodes with timers running.  Likewise for keyboard click.
+ *
+ * TO IMPLEMENT: Similarly, the delay is also waived if there is already a popup open and then the user hovers
+ * another button that shows a popup on hover.  To achieve this, all nodes that show a popup
+ * on the "delite-hover-activated" event must be marked with the attribute "hover-shows-popup".
+ * TODO: How to tell if another popup is opened?  It might have been opened by clicking rather than
+ * by hover.  Or do we care about that case?
+ *
+ * TO IMPLEMENT: Remember whether it opened due to a hover event or a click event.  If it opened
+ * due to a click event then it shouldn't close until another click.
+ *
  * @module delite/activationTracker
  * */
 define([
@@ -34,10 +58,33 @@ define([
 
 	var ActivationTracker = dcl(Evented, /** @lends module:delite/activationTracker */ {
 		/**
-		 * List of currently active widgets (focused widget and its ancestors).
+		 * Amount of time in milliseconds after a node is hovered to send the delite-hover-activated event,
+		 * and likewise the amount of time after a node is unhovered before sending the
+		 * delite-hover-deactivated event.
+		 */
+		hoverDelay: 500,
+
+		/**
+		 * List of currently active nodes (focused node and its ancestors).
 		 * @property {Element[]} activeStack
 		 */
 		activeStack: [],
+
+		/**
+		 * List of nodes that have been hovered more than hoverDelay milliseconds to get a delite-hover-activated event
+		 * (and not unhovered more than hoverDelay ms).
+		 * TODO: start using
+		 * @property {Element[]} activeStack
+		 */
+		hoverActiveStack: [],
+
+		/**
+		 * List of currently hovered nodes (hovered node and its ancestors).
+		 * This is different than the `hoverActiveStack[]` in that there's a delay
+		 * between hovering a node and that node being marked as "hover active"
+		 * @property {Element[]} hoverStack
+		 */
+		hoverStack: [],
 
 		/**
 		 * Registers listeners on the specified window to detect when the user has
@@ -86,17 +133,23 @@ define([
 				_this._blurHandler(evt.target);
 			}
 
+			function mouseOverHandler(evt) {
+				_this._mouseOverHandler(evt.target);
+			}
+
 			if (body) {
 				// Listen for touches or mousedowns.
 				body.addEventListener("pointerdown", pointerDownHandler, true);
 				body.addEventListener("focus", focusHandler, true);	// need true since focus doesn't bubble
 				body.addEventListener("blur", blurHandler, true);	// need true since blur doesn't bubble
+				body.addEventListener("mouseover", mouseOverHandler);
 
 				return {
 					remove: function () {
 						body.removeEventListener("pointerdown", pointerDownHandler, true);
 						body.removeEventListener("focus", focusHandler, true);
 						body.removeEventListener("blur", blurHandler, true);
+						body.addEventListener("mouseover", mouseOverHandler);
 					}
 				};
 			}
@@ -141,18 +194,11 @@ define([
 		},
 
 		/**
-		 * Callback when node is focused or pointerdown'd.
-		 * @param {Element} node - The node.
-		 * @param {string} by - "mouse" if the focus/pointerdown was caused by a mouse down event.
+		 * Given a node, return the stack of nodes starting with <body> and ending with that node.
+		 * @param node
 		 * @private
 		 */
-		_pointerDownOrFocusHandler: function (node, by) {
-			if (this._clearActiveWidgetsTimer) {
-				// forget the recent blur event
-				clearTimeout(this._clearActiveWidgetsTimer);
-				delete this._clearActiveWidgetsTimer;
-			}
-
+		_getStack: function (node, by) {
 			// compute stack of active widgets (ex: ComboButton --> Menu --> MenuItem)
 			var newStack = [];
 			try {
@@ -181,6 +227,25 @@ define([
 				}
 			} catch (e) { /* squelch */
 			}
+
+			return newStack;
+		},
+
+		/**
+		 * Callback when node is focused or pointerdown'd.
+		 * @param {Element} node - The node.
+		 * @param {string} by - "mouse" if the focus/pointerdown was caused by a mouse down event.
+		 * @private
+		 */
+		_pointerDownOrFocusHandler: function (node, by) {
+			if (this._clearActiveWidgetsTimer) {
+				// forget the recent blur event
+				clearTimeout(this._clearActiveWidgetsTimer);
+				delete this._clearActiveWidgetsTimer;
+			}
+
+			// Compute stack of active widgets ending at node (ex: ComboButton --> Menu --> MenuItem).
+			var newStack = this._getStack(node, by);
 
 			this._setStack(newStack, by);
 
@@ -258,6 +323,71 @@ define([
 				node = newStack[i];
 				on.emit(node, "delite-activated", {bubbles: false, by: by});
 				this.emit("activated", node, by);
+			}
+		},
+
+		/**
+		 * React to when a new node is hovered.  If a node is hovered long enough it
+		 * will get a delite-hover-activated event, and if it and its descendants (ex:
+		 * DropDownButton's descendant Tooltip) lose hover for long enough, it will get a
+		 * delite-hover-deactivated event.
+		 * @private
+		 */
+		_mouseOverHandler: function (node) {
+			var oldStack = this.hoverStack, lastOldIdx = oldStack.length - 1;
+			var newStack = this.hoverStack = this._getStack(node), lastNewIdx = newStack.length - 1;
+			var i;
+
+			// For all elements that have left the hover chain, stop timer to
+			// send those elements delite-hover-activated event, or start timer to send
+			// those elements delite-hover-deactivated event.
+			for (i = lastOldIdx; i >= 0 && oldStack[i] !== newStack[i]; i--) {
+				this.onNodeLeaveHoverStack(oldStack[i]);
+			}
+
+			// For all elements that have become hovered, start timer to send
+			// those elements delite-hover-activated event, or clear timer to send
+			// delite-hover-deactivated event.
+			for (i++; i <= lastNewIdx; i++) {
+				this.onNodeEnterHoverStack(newStack[i]);
+			}
+		},
+
+		/**
+		 * Called when a node enters the hover stack.
+		 * @param {Element} hoveredNode
+		 */
+		onNodeEnterHoverStack: function (hoveredNode) {
+			if (hoveredNode.hoverDeactivateTimer) {
+				// This node previously got a delite-hover-activated event,
+				// but didn't yet get a delite-hover-deactivated, so nothing really to do.
+				clearTimeout(hoveredNode.hoverDeactivateTimer);
+				delete hoveredNode.hoverDeactivateTimer;
+			} else {
+				// Set timer so that if node remains hovered, we send a delite-hover-activated event.
+				hoveredNode.hoverActivateTimer = setTimeout(function () {
+					delete hoveredNode.hoverActivateTimer;
+					on.emit(hoveredNode, "delite-hover-activated");
+				}.bind(this), this.hoverDelay);
+			}
+		},
+
+		/**
+		 * Called when a node leaves the hover stack.
+		 * @param {Element} unhoveredNode
+		 */
+		onNodeLeaveHoverStack: function (unhoveredNode) {
+			if (unhoveredNode.hoverActivateTimer) {
+				// Node was hovered but it hadn't gotten a delite-hover-activated event yet, so nothing to do.
+				clearTimeout(unhoveredNode.hoverActivateTimer);
+				delete unhoveredNode.hoverActivateTimer;
+			} else {
+				// Set timer so that if node remains unhovered, we send a delite-hover-deactivated event.
+				unhoveredNode.hoverDeactivateTimer = setTimeout(function () {
+					delete unhoveredNode.hoverDeactivateTimer;
+					unhoveredNode.hoverActivated = false;
+					on.emit(unhoveredNode, "delite-hover-deactivated");
+				}.bind(this), this.hoverDelay);
 			}
 		}
 	});
