@@ -2,10 +2,11 @@
 define([
 	"dcl/dcl",
 	"requirejs-dplugins/jquery!attributes/classes",	// addClass(), removeClass()
+	"./a11y",
 	"./features",
 	"./Widget",
 	"dpointer/events"		// so can just monitor for "pointerdown"
-], function (dcl, $, has, Widget) {
+], function (dcl, $, a11y, has, Widget) {
 
 	/**
 	 * Dispatched after the user has selected a different descendant, by clicking, arrow keys,
@@ -233,6 +234,21 @@ define([
 							navigatedDescendant.tabIndex = this._savedTabIndex;
 						} else {
 							navigatedDescendant.removeAttribute("tabindex");
+							
+							// Setup listener so shift-tab on first tab navigable child of navigatedDescendant
+							// goes to the navigatedDescendant itself.  Nothing is precomputed, in case the
+							// navigatedDescendant's children change dynamically.
+							if (!navigatedDescendant.shiftTabListener) {
+								navigatedDescendant.shiftTabListener = this.on("keydown", function (evt) {
+									if (evt.shiftKey && evt.key === "Tab" &&
+											evt.target === a11y.getFirstInTabbingOrder(navigatedDescendant)) {
+										navigatedDescendant.tabIndex = this._savedTabIndex;
+										evt.preventDefault();
+										evt.stopPropagation();
+										navigatedDescendant.focus();
+									}
+								}.bind(this), navigatedDescendant);
+							}
 						}
 						this._descendantNavigateHandler(navigatedDescendant, evt);
 					}
@@ -250,7 +266,8 @@ define([
 				// or keyboard.
 				var previouslyNavigatedDescendant = this._getTargetElement(evt);
 				if (previouslyNavigatedDescendant && previouslyNavigatedDescendant !== this.keyNavContainerNode) {
-					if (previouslyNavigatedDescendant.contains(evt.relatedTarget)) {
+					if (evt.relatedTarget !== previouslyNavigatedDescendant &&
+							previouslyNavigatedDescendant.contains(evt.relatedTarget)) {
 						// If focus has moved inside of the navigable descendant, then clear the
 						// navigable descendant's tabindex, to prevent extraneous tab stop and to
 						// avoid Safari and Firefox problem with nested focusable elements.
