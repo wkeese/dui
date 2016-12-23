@@ -221,23 +221,21 @@ define([
 						container.removeAttribute("tabindex");
 					}
 
-					// Also adjust tabIndex for navigable descendant (i.e. one that matches descendantSelector):
-					// 1. If the navigable descendant itself is focused, then set tabIndex=0 so that tab and
-					//    shift-tab work right.
-					// 2. If a descendant of the navigable descendant is focused, the clear the tabIndex, to
-					//    prevented unwanted tab stop and to avoid Safari/Firefox nested focus problems.
-					// When focus is moved outside the navigable descendant, focusoutHandler() resets its
-					// tabIndex to -1.
+					// Handling for when navigatedDescendant or a node inside a navigableDescendant gets focus.
 					var navigatedDescendant = this._getTargetElement(evt);
 					if (navigatedDescendant !== this) {
 						if (evt.target === navigatedDescendant) {
+							// If the navigable descendant itself is focused, then set tabIndex=0 so that tab and
+							// shift-tab work correctly.
 							navigatedDescendant.tabIndex = this._savedTabIndex;
 						} else {
+							// If a node inside the navigable descendant is focused, the clear the tabIndex,
+							// to avoid Safari/Firefox nested focus problems.
 							navigatedDescendant.removeAttribute("tabindex");
 							
-							// Setup listener so shift-tab on first tab navigable child of navigatedDescendant
-							// goes to the navigatedDescendant itself.  Nothing is precomputed, in case the
-							// navigatedDescendant's children change dynamically.
+							// Setup listener so shift-tab on first tab navigable descendant of navigatedDescendant
+							// goes to the navigatedDescendant itself.  Recomputes the first tab navigable descendant
+							// each keystroke in case the navigatedDescendant's children change dynamically.
 							if (!navigatedDescendant.shiftTabListener) {
 								navigatedDescendant.shiftTabListener = this.on("keydown", function (evt) {
 									if (evt.shiftKey && evt.key === "Tab" &&
@@ -250,6 +248,10 @@ define([
 								}.bind(this), navigatedDescendant);
 							}
 						}
+
+						// Note: when focus is moved outside the navigable descendant,
+						// focusoutHandler() resets its tabIndex to -1.
+
 						this._descendantNavigateHandler(navigatedDescendant, evt);
 					}
 				}
