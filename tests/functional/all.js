@@ -2,6 +2,7 @@
 define([
 	"./activationTracker",
 	"./Widget",
+	"./BoilerplateTextbox",
 	"./DialogUnderlay",
 	"./FormValueWidget",
 	"./HasDropDown",

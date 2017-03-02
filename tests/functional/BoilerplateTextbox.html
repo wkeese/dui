@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<meta name="viewport"
+		  content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+
+	<title>BoilerplateTextbox functional test</title>
+
+	<!-- For testing purposes. Real applications should load the AMD loader directly -->
+	<script type="text/javascript" src="boilerplate.js"></script>
+
+	<script type="text/javascript">
+		var ready = false; // set to true when the test page is ready
+
+		require([
+			"dcl/dcl",
+			"delite/register",
+			"delite/BoilerplateTextbox",
+			"requirejs-domready/domReady!"
+		], function (
+			dcl,
+			register,
+			BoilerplateTextbox
+		) {
+			register("d-datetextbox", [HTMLElement, BoilerplateTextbox], {
+				value: "",
+
+				createdCallback: function () {
+					// Must create new sections array (with new Field Objects) for each BoilerplateTextbox.
+					this.sections = [
+						new BoilerplateTextbox.NumberField({ boilerplate: "mm"}),
+						new BoilerplateTextbox.Delimiter({ boilerplate: "/"}),
+						new BoilerplateTextbox.NumberField({ boilerplate: "dd"}),
+						new BoilerplateTextbox.Delimiter({ boilerplate: "/"}),
+						new BoilerplateTextbox.NumberField({ boilerplate: "yyyy"})
+					];
+				}
+			});
+
+			var AmPmField = dcl([BoilerplateTextbox.Field], {
+				boilerplate: "am",
+
+				type: function (char) {
+					 switch (char) {
+						 case "a":
+							 this.value = "am";
+							 break;
+						 case "p":
+							 this.value = "pm";
+							 break;
+					 }
+					 return true;
+				}
+			});
+
+			register("d-timetextbox", [HTMLElement, BoilerplateTextbox], {
+				sections: [
+					new BoilerplateTextbox.NumberField({ boilerplate: "hh"}),
+					new BoilerplateTextbox.Delimiter({ boilerplate: ":"}),
+					new BoilerplateTextbox.NumberField({ boilerplate: "mm"}),
+					new BoilerplateTextbox.Delimiter({ boilerplate: " "}),
+					new AmPmField()
+				]
+			});
+
+			register.deliver();
+
+			ready = true;
+		});
+
+		/**
+		 * Function to get value and selection (aka focused field) of specified BoilerplateTextbox.
+		 * @param node
+		 * @returns {[string,number,number]}
+		 */
+		function state(node) {
+			return [node.focusNode.value, node.focusNode.selectionStart, node.focusNode.selectionEnd];
+		}
+
+		/**
+		 * Reset widgets to original values.
+		 */
+		function resetToOriginalValues() {
+			 dt1.value = "";
+			 dt2.value = "07/04/2008";
+			 tt1.value = "";
+		}
+	</script>
+</head>
+<body>
+	<h1>BoilerplateTextbox functional test</h1>
+
+	<label for="pi">plain input</label>:
+	<input id="pi">
+	<br><br>
+
+	<label for="dt1-input">Date</label>:
+	<d-datetextbox id="dt1"></d-datetextbox>
+	<br><br>
+
+	<label for="dt2-input">Date with initial value</label>:
+	<d-datetextbox id="dt2" value="07/04/2008"></d-datetextbox>
+	<br><br>
+
+	<label for="tt1-input">Time</label>:
+	<d-timetextbox id="tt1" pattern="hh:mm:ss am"></d-timetextbox>
+	<br><br>
+
+	<button id="reset" onclick="resetToOriginalValues();">reset to original values</button>
+</body>
