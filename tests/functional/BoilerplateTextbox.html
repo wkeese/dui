@@ -76,7 +76,11 @@
 		 * @returns {[string,number,number]}
 		 */
 		function state(node) {
-			return [node.focusNode.value, node.focusNode.selectionStart, node.focusNode.selectionEnd];
+			return {
+				value: node.value,
+				displayed: node.focusNode.value,
+				selection: [node.focusNode.selectionStart, node.focusNode.selectionEnd]
+			};
 		}
 
 		/**

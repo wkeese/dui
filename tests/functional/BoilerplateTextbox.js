@@ -32,34 +32,58 @@ define([
 			return this.remote
 				.findById("dt1-input").click().end()
 				.execute("return state(dt1);").then(function (v) {
-					assert.deepEqual(v, ["mm/dd/yyyy", 0, 2], "mm selected");
+					assert.deepEqual(v, {
+						value: "",
+						displayed: "mm/dd/yyyy",
+						selection: [0, 2]
+					}, "mm selected");
 				})
 				.execute("dt1.emit('keydown', {key: '1'}, dt1.focusNode);")
 				.execute("return state(dt1);").then(function (v) {
-					assert.deepEqual(v, ["01/dd/yyyy", 0, 2], "mm selected, 1 typed");
+					assert.deepEqual(v, {
+						value: "",
+						displayed: "01/dd/yyyy",
+						selection: [0, 2]
+					}, "mm selected, 1 typed");
 				})
 				.execute("dt1.emit('keydown', {key: '2'}, dt1.focusNode);")
 				.execute("return state(dt1);").then(function (v) {
-					assert.deepEqual(v, ["12/dd/yyyy", 3, 5], "focus automatically moves to next field");
+					assert.deepEqual(v, {
+						value: "",
+						displayed: "12/dd/yyyy",
+						selection: [3, 5]
+					}, "focus automatically moves to next field");
 				})
 				.execute("dt1.emit('keydown', {key: '3'}, dt1.focusNode);")
 				.execute("return state(dt1);").then(function (v) {
-					assert.deepEqual(v, ["12/03/yyyy", 3, 5], "3 typed");
+					assert.deepEqual(v, {
+						value: "",
+						displayed: "12/03/yyyy",
+						selection: [3, 5]
+					}, "3 typed");
 				})
 				.execute("dt1.emit('keydown', {key: 'Tab'}, dt1.focusNode);")
 				.execute("return state(dt1);").then(function (v) {
-					assert.deepEqual(v, ["12/03/yyyy", 6, 10], "tab skips to next field");
+					assert.deepEqual(v, {
+						value: "",
+						displayed: "12/03/yyyy",
+						selection: [6, 10]
+					}, "tab skips to next field");
 				})
 				.execute("dt1.emit('keydown', {key: '2'}, dt1.focusNode);")
 				.execute("dt1.emit('keydown', {key: '0'}, dt1.focusNode);")
 				.execute("dt1.emit('keydown', {key: '1'}, dt1.focusNode);")
 				.execute("dt1.emit('keydown', {key: '7'}, dt1.focusNode);")
-				.execute("return document.activeElement.value;").then(function (text) {
-					assert.strictEqual(text, "12/03/2017", "typed year, focus still on dt1");
+				.execute("return document.activeElement.id;").then(function (id) {
+					assert.strictEqual(id, "dt1-input", "focus still on dt1");
 				})
 				.execute("dt1.emit('keydown', {key: 'Tab', shiftKey: true}, dt1.focusNode);")
 				.execute("return state(dt1);").then(function (v) {
-					assert.deepEqual(v, ["12/03/2017", 3, 5], "shift-tab goes back to previous field");
+					assert.deepEqual(v, {
+						value: "12/03/2017",
+						displayed: "12/03/2017",
+						selection: [3, 5]
+					}, "shift-tab goes back to previous field");
 				});
 		},
 
@@ -75,15 +99,27 @@ define([
 					assert.strictEqual(id, "dt1-input", "tab into dt1");
 				})
 				.execute("return state(dt1);").then(function (v) {
-					assert.deepEqual(v, ["mm/dd/yyyy", 0, 2], "mm selected");
+					assert.deepEqual(v, {
+						value: "",
+						displayed: "mm/dd/yyyy",
+						selection: [0, 2]
+					}, "mm selected");
 				})
 				.execute("dt1.emit('keydown', {key: 'Tab'}, dt1.focusNode);")
 				.execute("return state(dt1);").then(function (v) {
-					assert.deepEqual(v, ["mm/dd/yyyy", 3, 5], "dd selected");
+					assert.deepEqual(v, {
+						value: "",
+						displayed: "mm/dd/yyyy",
+						selection: [3, 5]
+					}, "dd selected");
 				})
 				.execute("dt1.emit('keydown', {key: 'Tab'}, dt1.focusNode);")
 				.execute("return state(dt1);").then(function (v) {
-					assert.deepEqual(v, ["mm/dd/yyyy", 6, 10], "yyyy selected");
+					assert.deepEqual(v, {
+						value: "",
+						displayed: "mm/dd/yyyy",
+						selection: [6, 10]
+					}, "yyyy selected");
 				})
 				.pressKeys(keys.TAB)
 				.execute("return document.activeElement.id;").then(function (id) {
@@ -112,19 +148,35 @@ define([
 			return this.remote
 				.findById("dt2-input").click().end()
 				.execute("return state(dt2);").then(function (v) {
-					assert.deepEqual(v, ["07/04/2008", 0, 2], "month selected");
+					assert.deepEqual(v, {
+						value: "07/04/2008",
+						displayed: "07/04/2008",
+						selection: [0, 2]
+					}, "month selected");
 				})
 				.execute("dt2.emit('keydown', {key: 'Backspace'}, dt2.focusNode);")
 				.execute("return state(dt2);").then(function (v) {
-					assert.deepEqual(v, ["mm/04/2008", 0, 2], "month cleared");
+					assert.deepEqual(v, {
+						value: "",
+						displayed: "mm/04/2008",
+						selection: [0, 2]
+					}, "month cleared");
 				})
 				.execute("dt2.emit('keydown', {key: '9'}, dt2.focusNode);")
 				.execute("return state(dt2);").then(function (v) {
-					assert.deepEqual(v, ["09/04/2008", 0, 2], "month partially typed");
+					assert.deepEqual(v, {
+						value: "09/04/2008",
+						displayed: "09/04/2008",
+						selection: [0, 2]
+					}, "month partially typed");
 				})
 				.execute("dt2.emit('keydown', {key: 'Backspace'}, dt2.focusNode);")
 				.execute("return state(dt2);").then(function (v) {
-					assert.deepEqual(v, ["mm/04/2008", 0, 2], "month cleared again");
+					assert.deepEqual(v, {
+						value: "",
+						displayed: "mm/04/2008",
+						selection: [0, 2]
+					}, "month cleared again");
 				});
 		}
 

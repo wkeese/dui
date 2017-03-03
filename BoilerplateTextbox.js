@@ -147,7 +147,7 @@ define([
 			// Return concatenated values of fields.
 			// If none of the fields have values then return "".
 			// Unclear what to return when some (but not all) of the fields have values.
-			if (this.sections.some(function (section) { return !section.editable || section.value; })) {
+			if (this.sections.every(function (section) { return section.value || !section.editable; })) {
 				return this.sections.map(function (section) {
 					return section.value || section.boilerplate;
 				}).join("");
