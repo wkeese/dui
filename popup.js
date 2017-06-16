@@ -244,7 +244,7 @@ define([
 		},
 
 		/**
-		 * Detach specified popup widget from document
+		 * Detach specified popup widget from document.
 		 * @param {module:delite/Widget} widget
 		 */
 		detach: function (widget) {
@@ -278,6 +278,8 @@ define([
 				display: "none",
 				height: "auto"		// Open may have limited the height to fit in the viewport
 			});
+
+			this.detach(widget);
 		},
 
 		/**
