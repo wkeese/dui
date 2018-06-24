@@ -2,7 +2,7 @@
 	"name": "delite",
 	"version": "0.8.2",
 	"dependencies": {
-		"dcl": "1.1.2",
+		"dcl": "2.x",
 		"decor": "0.7.x",
 		"dpointer": "0.5.x",
 		"jquery": ">=2.1",
