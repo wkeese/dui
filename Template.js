@@ -39,7 +39,7 @@ define(["./register"], function (register) {
 	 * @class module:delite/Template
 	 */
 	var Template = register.dcl(/** @lends module:delite/Template# */ {
-		declaredClass: "delite/Store",
+		declaredClass: "delite/Template",
 
 		constructor: function (tree, rootNodeName, createRootNode) {
 			this.buildText = [];	// code to build the initial DOM
