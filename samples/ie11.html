@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<meta name="viewport"
+		  content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+
+	<title>Test Custom Elements Polyfill</title>
+
+	<script type="text/javascript" src="../../requirejs/require.js"></script>
+
+	<script type="text/javascript">
+		require({
+			baseUrl:"../.."
+		},[
+			"dcl/dcl",
+			"custom-elements/custom-elements.min"
+		], function (dcl) {
+			// Variation on dcl.weaveChain() that *doesn't* do HTMLElement.apply(this, arguments)...
+			// since that throws an exception.  Could probably be simplified more.
+			// duplicated below.
+			function weaveConstructorChain (chain, utils) {
+				var newProp = utils.cloneDescriptor(chain[chain.length - 1]);
+
+				// extract functions
+				chain = chain.map(function (prop) {
+					return prop.get || prop.set ? utils.adaptGet(prop.get) : prop.value;
+				});
+
+				newProp.value = function () {
+					for (var i = 0; i < chain.length; ++i) {
+						if (chain[i] !== HTMLElement && chain[i] !== HTMLUnknownElement) {
+							chain[i].apply(this, arguments);
+						}
+					}
+				};
+
+				return newProp;
+			}
+
+			// Variation on dcl.weaveAfter to call weaveConstructorChain instead of dcl.weaveChain()
+			var weaveConstructorAfter  = {name: 'after',  weave: weaveConstructorChain};
+
+			// Intercept calls to dcl.chainAfter() setting up constructor chain, to not
+			// do HTMLElement.apply(this, arguments).
+			dcl.chainAfter  = function (ctr, name) { return dcl.chainWith(ctr, name, name === "constructor" ?
+				weaveConstructorAfter : dcl.weaveAfter); };
+
+			// To get IE working, https://github.com/Mindcraft1/custom-element-ie11 first loads
+			// webcomponents-lite.js, which defines customelements.define(), and then loads
+			// native-shim-es5.js (a babel-transpiled version of native-shim.js), which puts a
+			// wrapper around the webcomponents-lite.js' customelements.define() to get IE to work.
+			// That's still not good enough to get "new AppDrawer()" to work.
+			// So I'm taking a less magical approach: have a register() method like the current delite register()
+			// method, i.e. it returns a constructor.
+			function register(tagname, elementClass) {
+				var elementProto = elementClass.prototype;
+
+				function StandInElement() {
+					var elem = HTMLElement.call(this);
+					Object.setPrototypeOf(elem, elementProto);
+
+					// Call the user-defined constructor on our instance:
+					elementClass.call(elem);
+
+					return elem;
+				}
+				Object.setPrototypeOf(StandInElement, HTMLElement);
+
+				var standInProto = StandInElement.prototype;
+				StandInElement.observedAttributes = elementClass.observedAttributes;
+				standInProto.connectedCallback = elementProto.connectedCallback;
+				standInProto.disconnectedCallback = elementProto.disconnectedCallback;
+				standInProto.attributeChangedCallback = elementProto.attributeChangedCallback;
+				standInProto.adoptedCallback = elementProto.adoptedCallback;
+
+				customElements.define(tagname, StandInElement);
+
+				return StandInElement;
+			}
+
+			// Use DCL to create the prototype chain.
+			var CustomElement = dcl(HTMLElement, {
+				constructor: function () {
+					console.log("CustomElement constructor");
+					this.textContent = "hello world";
+				},
+				hello: function () {
+					console.log("hello from CustomElement");
+				}
+			});
+			dcl.chainAfter(CustomElement, "hello");
+			var Widget = dcl(CustomElement, {
+				constructor: function () {
+					console.log("Widget constructor");
+				},
+				hello: function () {
+					console.log("hello from Widget");
+				}
+			});
+
+			// Define the custom element.
+			var Constructor = register("my-widget", Widget);
+
+			// Test programmatic creation.
+			var elem = new Constructor();
+			document.body.appendChild(elem);
+		});
+	</script>
+
+</head>
+<body>
+<h1>Polyfill test, trying to get IE11 working</h1>
+
+<my-widget></my-widget>
+</body>
+
+</html>

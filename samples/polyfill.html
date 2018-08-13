@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8">
+	<meta name="viewport"
+		  content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+
+	<title>Test Custom Elements Polyfill</title>
+
+	<script type="text/javascript" src="../../requirejs/require.js"></script>
+
+	<script type="text/javascript">
+require({
+	baseUrl:"../.."
+},[
+	"dcl/dcl",
+	"custom-elements/custom-elements.min"
+], function (dcl) {
+	// Variation on dcl.weaveChain() that *doesn't* do HTMLElement.apply(this, arguments)...
+	// since that throws an exception.  Could probably be simplified more.
+	function weaveConstructorChain (chain, utils) {
+		var newProp = utils.cloneDescriptor(chain[chain.length - 1]);
+
+		// extract functions
+		chain = chain.map(function (prop) {
+			return prop.get || prop.set ? utils.adaptGet(prop.get) : prop.value;
+		});
+
+		newProp.value = function () {
+			for (var i = 0; i < chain.length; ++i) {
+				if (chain[i] !== HTMLElement && chain[i] !== HTMLUnknownElement) {
+					chain[i].apply(this, arguments);
+				}
+			}
+		};
+
+		return newProp;
+	}
+
+	// Variation on dcl.weaveAfter to call weaveConstructorChain instead of dcl.weaveChain()
+	var weaveConstructorAfter  = {name: 'after',  weave: weaveConstructorChain};
+
+	// Intercept calls to dcl.chainAfter() setting up constructor chain, to not
+	// do HTMLElement.apply(this, arguments).
+	dcl.chainAfter = function (ctr, name) { return dcl.chainWith(ctr, name, name === "constructor" ?
+		weaveConstructorAfter : dcl.weaveAfter); };
+
+	// Use DCL to create the prototype chain.
+	var CustomElement = dcl(HTMLElement, {
+		constructor: function () {
+			console.log("CustomElement constructor");
+		},
+		hello: function () {
+			console.log("hello from CustomElement");
+		}
+	});
+	dcl.chainAfter(CustomElement, "hello");
+	var Widget = dcl(CustomElement, {
+		constructor: function () {
+			console.log("Widget constructor");
+			this.constructed = true;
+		},
+
+		connectedCallback: function () {
+			// This can't be done from the constructor because it creates a child DOM node.
+			// https://github.com/Mindcraft1/custom-element-ie11 does it in connectedCallback.
+			this.textContent = "hello world";
+		},
+
+		hello: function () {
+			console.log("hello from Widget");
+		}
+	});
+
+	// Use trick from https://github.com/w3c/webcomponents/issues/587#issuecomment-254017839
+	// to create constructor.  Similar to current code in register.js.
+	function Constructor() {
+		var elem = typeof Reflect === "object" ? Reflect.construct(HTMLElement, [], Constructor) : HTMLElement.call(this);
+		Widget.prototype.constructor.call(elem);
+		return elem;
+	}
+	Object.setPrototypeOf(Constructor.prototype, Widget.prototype);
+	Object.setPrototypeOf(Constructor, Widget);
+
+	Constructor.observedAttributes = Widget.observedAttributes;
+	var ConstructorProto = Constructor.prototype;
+	ConstructorProto.connectedCallback = Widget.prototype.connectedCallback;
+	ConstructorProto.disconnectedCallback = Widget.prototype.disconnectedCallback;
+	ConstructorProto.attributeChangedCallback = Widget.prototype.attributeChangedCallback;
+	ConstructorProto.adoptedCallback = Widget.prototype.adoptedCallback;
+
+	// Define the custom element.
+	customElements.define("my-widget", Constructor);
+
+	// Test programmatic creation.
+	var newd = new Constructor();
+	document.body.appendChild(newd);
+
+	// Test the other programmatic creation.
+	var ce = document.createElement("my-widget");
+	document.body.appendChild(ce);
+});
+</script>
+
+</head>
+<body>
+	<h1>Polyfill test, works everywhere!</h1>
+
+	<my-widget></my-widget>
+</body>
+
+</html>
