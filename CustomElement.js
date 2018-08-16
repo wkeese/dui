@@ -58,7 +58,7 @@ define([
 			// props like "style" that are merely inherited from HTMLElement.
 
 			for (var proto = prototype;
-				proto && proto !== this._baseElement.prototype;
+				proto && proto !== this._BaseHTMLElement.prototype;
 				proto = Object.getPrototypeOf(proto)
 			) {
 				Object.keys(proto).forEach(function (prop) {
@@ -68,25 +68,40 @@ define([
 		},
 
 		/**
-		 * Set to true when `createdCallback()` has completed.
+		 * Set to true when `constructor()` has completed.
 		 * @member {boolean}
 		 * @protected
 		 */
 		created: false,
 
 		/**
-		 * Called when the custom element is created, or when `register.parse()` parses a custom tag.
+		 * Called when the custom element is created, or when a custom tag is parsed.
 		 *
 		 * This method is automatically chained, so subclasses generally do not need to use `dcl.superCall()`,
 		 * `dcl.advise()`, etc.
 		 * @method
 		 * @protected
 		 */
-		createdCallback: dcl.advise({
+		constructor: dcl.advise({
 			before: function () {
 				// Mark this object as observable with Object.observe() shim
 				if (!this._observable) {
 					Observable.call(this);
+				}
+
+				// Set up this.constructor._propCaseMap, a mapping from lowercase property name to actual name,
+				// ex: iconclass --> iconClass, including the methods, but excluding
+				// props like "style" that are merely inherited from HTMLElement.
+				if (!this.constructor._propCaseMap) {
+					var pcm = this.constructor._propCaseMap = {};
+					for (var proto = Object.getPrototypeOf(this);
+						 proto && proto !== this._BaseHTMLElement.prototype;
+						 proto = Object.getPrototypeOf(proto)
+					) {
+						Object.keys(proto).forEach(function (prop) {
+							pcm[prop.toLowerCase()] = prop;
+						});
+					}
 				}
 
 				// Get parameters that were specified declaratively on the widget DOMNode.
@@ -105,27 +120,31 @@ define([
 						this[pa.prop] = pa.value;
 					}
 				}, this);
+
+				if (this.deliver) {
+					this.deliver();
+				}
 			}
 		}),
 
 		/**
-		 * Set to true when `attachedCallback()` has completed, and false when `detachedCallback()` called.
+		 * Set to true when `connectedCallback()` has completed, and false when `disconnectedCallback()` called.
 		 * @member {boolean}
 		 * @protected
 		 */
 		attached: false,
 
 		/**
-		 * Called automatically when the element is added to the document, after `createdCallback()` completes.
+		 * Called automatically when the element is added to the document, after `constructor()` completes.
 		 * This method is automatically chained, so subclasses generally do not need to use `dcl.superCall()`,
 		 * `dcl.advise()`, etc.
 		 * @method
 		 * @fires module:delite/CustomElement#customelement-attached
 		 */
-		attachedCallback: dcl.advise({
+		connectedCallback: dcl.advise({
 			before: function () {
 				// Call computeProperties() and refreshRendering() for declaratively set properties.
-				// Do this in attachedCallback() rather than createdCallback() to avoid calling refreshRendering() etc.
+				// Do this in connectedCallback() rather than constructor() to avoid calling refreshRendering() etc.
 				// prematurely in the programmatic case (i.e. calling it before user parameters have been applied).
 				this.deliver();
 			},
@@ -145,7 +164,7 @@ define([
 		 * This method is automatically chained, so subclasses generally do not need to use `dcl.superCall()`,
 		 * `dcl.advise()`, etc.
 		 */
-		detachedCallback: function () {
+		disconnectedCallback: function () {
 			this.attached = false;
 		},
 
@@ -232,7 +251,7 @@ define([
 		 * @protected
 		 */
 		parseAttribute: function (name, value) {
-			var pcm = this._propCaseMap;
+			var pcm = this.constructor._propCaseMap;
 			if (name in pcm) {
 				name =  pcm[name]; // convert to correct case for widget
 				return {
@@ -289,7 +308,7 @@ define([
 
 			if (this.parentNode) {
 				this.parentNode.removeChild(this);
-				this.detachedCallback();
+				this.disconnectedCallback();
 			}
 		},
 
@@ -336,7 +355,7 @@ define([
 
 			function getChildrenHelper(root) {
 				for (var node = root.firstChild; node; node = node.nextSibling) {
-					if (node.nodeType === 1 && node.createdCallback) {
+					if (node.nodeType === 1 && /-/.test(node.tagName)) {
 						outAry.push(node);
 					} else {
 						getChildrenHelper(node);
@@ -351,9 +370,8 @@ define([
 
 	// Setup automatic chaining for lifecycle methods.
 	// destroy() is chained in Destroyable.js.
-	dcl.chainAfter(CustomElement, "createdCallback");
-	dcl.chainAfter(CustomElement, "attachedCallback");
-	dcl.chainBefore(CustomElement, "detachedCallback");
+	dcl.chainAfter(CustomElement, "connectedCallback");
+	dcl.chainBefore(CustomElement, "disconnectedCallback");
 
 	return CustomElement;
 });

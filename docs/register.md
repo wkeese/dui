@@ -112,5 +112,7 @@ on top of a base other than `HTMLElement`.
 
 `register()` tries to conform to the custom elements standard.
 Internally, it calls `customElements.define()`, and if that method
-isn't defined by the browser, then it loads the webcomponentjs polyfill.
+isn't defined by the browser, then it loads the
+[webcomponentjs/custom-elements](https://github.com/webcomponents/custom-elements)
+polyfill.
 

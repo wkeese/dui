@@ -182,8 +182,8 @@ define([
 				Object.setPrototypeOf(elem, Constructor.prototype);
 			}
 
-			CustomElementClass.prototype.constructor.call(elem);
-			// TODO: Try  CustomElementClass.call(elem) instead.
+			CustomElementClass.prototype.constructor.apply(elem, arguments);
+			// TODO: Try  CustomElementClass.apply(elem, arguments) instead.
 			return elem;
 		};
 		Object.setPrototypeOf(Constructor.prototype, CustomElementClass.prototype);
