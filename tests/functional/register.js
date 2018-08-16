@@ -18,10 +18,10 @@ define([
 
 		"custom element created": function () {
 			return this.remote
-				.execute("return document.getElementById('outside')._createdCallbackCalled").then(function (value) {
+				.execute("return document.getElementById('outside')._constructorCalled").then(function (value) {
 					assert(value, "custom element created");
 				})
-				.execute("return document.getElementById('outside')._attachedCallbackCalled").then(function (value) {
+				.execute("return document.getElementById('outside')._connectedCallbackCalled").then(function (value) {
 					assert(value, "custom element attached");
 				});
 
@@ -38,7 +38,7 @@ define([
 					assert.strictEqual(value.toLowerCase(), "test-widget", "children moved to .content property");
 				})
 				.execute(
-					"return '_createdCallbackCalled' in document.querySelector('template').content.querySelector('*')")
+					"return '_constructorCalled' in document.querySelector('template').content.querySelector('*')")
 					.then(function (value) {
 					assert.isFalse(value, "custom element in template not upgraded");
 				});

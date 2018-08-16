@@ -37,9 +37,8 @@ or using the custom tag in your HTML:
 ```
 
 You can think of `register` as a combination of a class declaration system (internally it uses [dcl](http://dcljs.org),
-and [document.registerElement](http://www.w3.org/TR/custom-elements/) from the new custom elements proposed standards.
-
-Note that the `register` module has a `createElement()` method, and new MyWidget() calls that method.
+and [customElements.define](https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements)
+from the custom elements standards.
 
 
 `register()` takes three arguments:
@@ -62,7 +61,7 @@ chain.  This will serve as the base element for the custom element that is part 
 interface that is roughly equivalent to the `<div>` tag and is the ancestor of all the HTML* DOM Elements.  If your
 widget doesn't need any special features offered by other tags, `HTMLElement` is likely your best base for your widget.
 
-If your widget through is designed to be an "extension" of another HTML element, like for example a `<button>`, then you
+If your widget through is designed to be an "extension" of another HTML element, for example a `<button>`, then you
 should consider utilising a different base for your widget.  This will ensure your widget will "behave" like that other
 root HTML element.  For example, to create something that extends a `<button>`, you would do something like this:
 
@@ -108,44 +107,10 @@ Because `deliteful/Button` has `HTMLButtonElement` as its base, it means that an
 tag when instantiating via element creation.  This means you should know if the widget you are descending from builds
 on top of a base other than `HTMLElement`.
 
-## Lifecycle
-
-First of all, note that no constructor methods are called when a widget is created.
-Rather, `createdCallback()` and `enterViewCallback()` are called.
-Generally though, you will extend [`delite/Widget`](Widget.md) which provides more specific lifecycle methods.
-
-## Rendering a widget
-
-Unlike Dijit, by the time `createdCallback()` is called (and in [`delite/Widget`](Widget.md) subclasses: `render()`),
-the widget's root node already exists.  Either it's the original root node from the markup
-(ex: `<button is="d-button">`) or it was created via the internal `register.createElement()` call.
-
-You cannot change the root node, although you can set attributes on it and setup event listeners.
-In addition, you will often create sub-nodes underneath the root node.
-
-Also note that the root node is `this`.   So putting those concepts together, a trivial `render()` method
-in a `delite/Widget` subclass would be:
-
-```js
-render: function(){
-	this.className = "d-button";
-}
-```
-
-## OOP
-
-As mentioned earlier, `register()` is built on [dcl](http://dcljs.org), and it also exposes some methods
-from dcl for calling subclass methods.   For example:
-
-```js
-open: register.after(function(){
-	// first the superclass open() call will run, then this code
-})
-```
-
 
 ## Standards
 
-`register()` tries to conform to the proposed custom elements standard.
-Internally, it will call `document.registerElement()` on platforms that support it.
+`register()` tries to conform to the custom elements standard.
+Internally, it calls `customElements.define()`, and if that method
+isn't defined by the browser, then it loads the webcomponentjs polyfill.
 
