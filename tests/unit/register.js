@@ -41,7 +41,7 @@ define([
 			});
 			assert.ok(TestWidget, "TestWidget created");
 
-			container.innerHTML += "<test-simple-widget id=tsw></test-simple-widget>";
+			container.innerHTML = "<test-simple-widget id=tsw></test-simple-widget>";
 			var tsw = document.getElementById("tsw");
 			register.upgrade(tsw, true);
 
@@ -88,19 +88,20 @@ define([
 			});
 			assert.ok(Mixin, "Mixin created");
 
-			TestWidget = register("test-widget", [HTMLElement, Mixin], {
+			TestWidget = register("test-stateful-widget", [HTMLElement, Mixin], {
 				barFunc: function () {
 					this._barCalled = true;
 				},
 
 				cs2: 3,
+				// TODO: this is old syntax and doesn't work anymore.
 				_setCs2Attr: function (val) {
 					this._set("cs2", val + 1);
 				}
 			});
 			assert.ok(TestWidget, "TestWidget created");
 
-			container.innerHTML += "<test-widget id=tw></test-widget>";
+			container.innerHTML = "<test-stateful-widget id=tw></test-stateful-widget>";
 			var tw = document.getElementById("tw");
 			register.upgrade(tw);
 
@@ -135,7 +136,7 @@ define([
 			});
 			assert.ok(TestExtendedWidget, "TestExtendedWidget created");
 
-			container.innerHTML += "<test-extended-widget id=tew></test-extended-widget>";
+			container.innerHTML = "<test-extended-widget id=tew></test-extended-widget>";
 			var tew = document.getElementById("tew");
 			register.upgrade(tew);
 			assert.ok(tew.foo, "foo");
@@ -157,6 +158,8 @@ define([
 			assert.ok(sawExt, "ext enumerable");
 		},
 
+		// Comment out button tests because customized built in elements not supported most places.
+		/*
 		button: function () {
 			// Create a simple widget extending something other than HTMLElement.
 			TestButtonWidget = register("test-button-widget", [HTMLButtonElement, Mixin], {
@@ -164,7 +167,7 @@ define([
 			});
 			assert.ok(TestButtonWidget, "TestButtonWidget created");
 
-			container.innerHTML += "<button is='test-button-widget' id=tbw></button>";
+			container.innerHTML = "<button is='test-button-widget' id=tbw></button>";
 			var tbw = document.getElementById("tbw");
 			register.upgrade(tbw);
 
@@ -181,7 +184,7 @@ define([
 			});
 			assert.ok(TestExtendedButtonWidget, "TestExtendedButtonWidget created");
 
-			container.innerHTML += "<button is='test-extended-button-widget' id=tebw></button>";
+			container.innerHTML = "<button is='test-extended-button-widget' id=tebw></button>";
 			var tebw = document.getElementById("tebw");
 			register.upgrade(tebw);
 
@@ -190,16 +193,17 @@ define([
 			tebw.extFunc();
 			assert.ok(tebw._extCalled, "_extCalled");
 		},
+		*/
 
 		// Test the new MyWidget() syntactic sugar
 		"new": function () {
 			var tw = new TestWidget({});
 			assert.ok(tw.foo, "TestWidget.foo");
-			assert.strictEqual(tw.nodeName.toLowerCase(), "test-widget", "nodeName of TestWidget");
+			assert.strictEqual(tw.nodeName.toLowerCase(), "test-stateful-widget", "nodeName of TestWidget");
 		},
 
-		// Test the parser, which scans the DOM for registered widgets and upgrades them
-		parse: function () {
+		// Test declarative creation.
+		declarative1: function () {
 			register("test-parser-widget", [HTMLElement, Mixin], {
 				createdCalls: 0,
 				constructor: function () {
@@ -212,21 +216,21 @@ define([
 				}
 			});
 
-			container.innerHTML += "<div>" +
+			container.innerHTML = "<div>" +
 				"<button is='test-extended-button-widget' id=ebw2>hello</button>" +
 				"<span>random node</span>" +
 				"<test-parser-widget id=pw></test-parser-widget>" +
 				"</div>";
 
 			setTimeout(this.async().callback(function () {
-				assert.strictEqual(document.getElementById("ebw2").label, "my label", "ebw2.label");
+				// customized built in elements not supported most places
+				// assert.strictEqual(document.getElementById("ebw2").label, "my label", "ebw2.label");
 				assert.strictEqual(document.getElementById("pw").createdCalls, 1, "pw.createdCalls");
 				assert.strictEqual(document.getElementById("pw").attachedCalls, 1, "pw.attachedCalls");
 			}), 0);
 		},
 
-		// Test the parser, which scans the DOM for registered widgets and upgrades them.
-		parser2: function () {
+		declarative2: function () {
 			// create dom nodes for not-yet-declared-widget, and attach them to document
 			container.innerHTML = "<test-auto-parse id=ap1></test-auto-parse>" +
 			"<div><test-auto-parse id=ap2></test-auto-parse></div>";
@@ -311,7 +315,7 @@ define([
 			try {
 				register("test-repeated-tag", [HTMLElement], { });
 			} catch (err) {
-				assert(/A widget is already registered with tag/.test(err.toString()), "err repeating tag");
+				// Error text is different on Chrome vs. Safari, so not checking the text.
 				threw = true;
 			}
 			assert(threw, "threw error when redeclaring same tag");

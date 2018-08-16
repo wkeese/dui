@@ -2,7 +2,7 @@
 define([
 	"dcl/advise",
 	"dcl/dcl",
-	"./custom-elements"
+	"./custom-elements!"
 ], function (
 	advise,
 	dcl
@@ -101,7 +101,9 @@ define([
 		});
 		newProp.value = function () {
 			for (var i = 0; i < chain.length; ++i) {
-				if (!htmlElementConstructorMap.has(chain[i])) {
+				/* global HTMLUnknownElement */
+				if (chain[i] !== HTMLElement && chain[i] !== HTMLUnknownElement
+						&& !htmlElementConstructorMap.has(chain[i])) {
 					chain[i].apply(this, arguments);
 				}
 			}
@@ -111,6 +113,14 @@ define([
 	var weaveConstructorAfter  = {name: "after", weave: weaveConstructorChain};
 	dcl.chainAfter = function (ctr, name) {
 		return dcl.chainWith(ctr, name, name === "constructor" ? weaveConstructorAfter : dcl.weaveAfter);
+	};
+	dcl._origMakeStub = dcl._makeStub;
+	dcl._makeStub = function (aroundStub, beforeChain, afterChain) {
+		if (aroundStub === HTMLElement || aroundStub === HTMLUnknownElement
+				|| htmlElementConstructorMap.has(aroundStub)) {
+			aroundStub = null;
+		}
+		return dcl._origMakeStub(aroundStub, beforeChain, afterChain);
 	};
 
 	/**
@@ -137,7 +147,8 @@ define([
 		// Get root (aka native) class: HTMLElement, HTMLInputElement, etc.
 		var BaseHTMLElement = bases[0];
 		if (BaseHTMLElement.prototype && BaseHTMLElement.prototype._BaseHTMLElement) {
-			// The first superclass is a BaseCtor created by another call to register, so get that baseCtor's root class
+			// The first superclass is a custom element created by another call to register(),
+			// so get that custom element's root HTML*Element.
 			BaseHTMLElement = BaseHTMLElement.prototype._BaseHTMLElement;
 		}
 
@@ -160,16 +171,24 @@ define([
 
 		// Use trick from https://github.com/w3c/webcomponents/issues/587#issuecomment-254017839
 		// to create constructor.
-		function Constructor() {
+		var Constructor = function () {
 			/* global Reflect */
-			var elem = typeof Reflect === "object" ? Reflect.construct(BaseHTMLElement, [], Constructor) :
-				BaseHTMLElement.call(this);
+			var elem;
+			if (typeof Reflect === "object") {
+				elem = Reflect.construct(BaseHTMLElement, [], Constructor);
+			} else {
+				// TODO: Try Object.create() too, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct
+				elem = BaseHTMLElement.call(this);
+				Object.setPrototypeOf(elem, Constructor.prototype);
+			}
+
 			CustomElementClass.prototype.constructor.call(elem);
+			// TODO: Try  CustomElementClass.call(elem) instead.
 			return elem;
-		}
+		};
 		Object.setPrototypeOf(Constructor.prototype, CustomElementClass.prototype);
-		Object.setPrototypeOf(Constructor, CustomElementClass);
-		var ConstructorProto = Constructor.prototype;
+		//Object.setPrototypeOf(Constructor, CustomElementClass.prototype);
+		var ConstructorProto = CustomElementClass.prototype;
 
 		// TODO: remove this code, clients shouldn't manually call connectedCallback/disconnectedCallback at all.
 		// Monkey-patch connectedCallback() and detachedCallback() to avoid double executions.
@@ -197,10 +216,9 @@ define([
 		ConstructorProto.attributeChangedCallback = CustomElementClass.prototype.attributeChangedCallback;
 		ConstructorProto.adoptedCallback = CustomElementClass.prototype.adoptedCallback;
 
-
 		// Define the custom element.
 		/* global customElements */
-		customElements.define(tag, Constructor);
+		customElements.define(tag, Constructor, _extends ? {extends: _extends} : null);
 
 		// Add some flags for debugging and return the new constructor
 		Constructor.tag = tag;
