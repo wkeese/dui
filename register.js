@@ -114,16 +114,50 @@ define([
 	};
 
 	/**
-	 * Registers the tag with the current document, and save tag information in registry.
-	 * Handles situations where the base constructor inherits from
-	 * HTMLElement but is not HTMLElement.
-	 * @param  {string}   tag         The custom tag name for the element, or the "is" attribute value.
-	 * @param  {string}	  _extends    The name of the tag this element extends, ex: "button" for <button is="...">
-	 * @param  {string}   BaseHTMLElement The native HTML*Element "class" that this custom element is extending.
-	 * @param  {Function} CustomElementClass    The constructor function.
-	 * @return {Function}             The "new" constructor function that can create instances of the custom element.
+	 * Define a custom element from a set of properties and a list of superclasses.
+	 *
+	 * @param  {string}               tag             The custom element's tag name.
+	 * @param  {Object[]}             superclasses    Any number of superclasses to be built into the custom element
+	 *                                                constructor. But first one must be [descendant] of HTMLElement.
+	 * @param  {Object}               props           Properties of this baseCtor class.
+	 * @return {Function}                             A constructor function that will create an instance of the custom
+	 *                                                element.
+	 * @function module:delite/register
 	 */
-	function getTagConstructor(tag, _extends, BaseHTMLElement, CustomElementClass) {
+	function register(tag, superclasses, props) {
+		// Create the baseCtor class by extending specified superclasses and adding specified properties.
+
+		// Make sure all the bases have their proper constructors for being composited.
+		// I.E. remove the wrapper added by getTagConstructor().
+		var superclassesArray = Array.isArray(superclasses) ? superclasses : superclasses ? [superclasses] : [];
+		var bases = superclassesArray.map(function (extension) {
+			return (extension && extension._ctor) || extension;
+		});
+
+		// Get root (aka native) class: HTMLElement, HTMLInputElement, etc.
+		var BaseHTMLElement = bases[0];
+		if (BaseHTMLElement.prototype && BaseHTMLElement.prototype._BaseHTMLElement) {
+			// The first superclass is a BaseCtor created by another call to register, so get that baseCtor's root class
+			BaseHTMLElement = BaseHTMLElement.prototype._BaseHTMLElement;
+		}
+
+		// Get name of tag that this BaseCtor extends, for example <button is="..."> --> "button"
+		var _extends;
+		if (BaseHTMLElement !== HTMLElement) {
+			_extends = htmlElementConstructorMap.get(BaseHTMLElement);
+			if (!_extends) {
+				throw new TypeError(tag + ": must have HTMLElement in prototype chain");
+			}
+		}
+
+		// Get a composited constructor
+		var CustomElementClass = dcl(bases, props || {}),
+			proto = CustomElementClass.prototype;
+		proto._ctor = CustomElementClass;
+		proto._BaseHTMLElement = BaseHTMLElement;
+		proto._tag = tag;
+		proto._extends = _extends;
+
 		// Use trick from https://github.com/w3c/webcomponents/issues/587#issuecomment-254017839
 		// to create constructor.
 		function Constructor() {
@@ -173,56 +207,6 @@ define([
 		Constructor._ctor = CustomElementClass;
 
 		return Constructor;
-	}
-
-	/**
-	 * Declare a baseCtor and register it as a custom element.
-	 *
-	 * @param  {string}               tag             The custom element's tag name.
-	 * @param  {Object[]}             superclasses    Any number of superclasses to be built into the custom element
-	 *                                                constructor. But first one must be [descendant] of HTMLElement.
-	 * @param  {Object}               props           Properties of this baseCtor class.
-	 * @return {Function}                             A constructor function that will create an instance of the custom
-	 *                                                element.
-	 * @function module:delite/register
-	 */
-	function register(tag, superclasses, props) {
-		// Create the baseCtor class by extending specified superclasses and adding specified properties.
-
-		// Make sure all the bases have their proper constructors for being composited.
-		// I.E. remove the wrapper added by getTagConstructor().
-		var superclassesArray = Array.isArray(superclasses) ? superclasses : superclasses ? [superclasses] : [];
-		var bases = superclassesArray.map(function (extension) {
-			return (extension && extension._ctor) || extension;
-		});
-
-		// Get root (aka native) class: HTMLElement, HTMLInputElement, etc.
-		var BaseHTMLElement = bases[0];
-		if (BaseHTMLElement.prototype && BaseHTMLElement.prototype._BaseHTMLElement) {
-			// The first superclass is a BaseCtor created by another call to register, so get that baseCtor's root class
-			BaseHTMLElement = BaseHTMLElement.prototype._BaseHTMLElement;
-		}
-
-		// Get name of tag that this BaseCtor extends, for example <button is="..."> --> "button"
-		var _extends;
-		if (BaseHTMLElement !== HTMLElement) {
-			_extends = htmlElementConstructorMap.get(BaseHTMLElement);
-			if (!_extends) {
-				throw new TypeError(tag + ": must have HTMLElement in prototype chain");
-			}
-		}
-
-		// Get a composited constructor
-		var CustomElementClass = dcl(bases, props || {}),
-			proto = CustomElementClass.prototype;
-		proto._ctor = CustomElementClass;
-		proto._BaseHTMLElement = BaseHTMLElement;
-		proto._tag = tag;
-		proto._extends = _extends;
-
-		// TODO: roll getTagConstructor() into here?  Or was it split off for jshint complexity?
-		/* jshint boss:true */
-		return getTagConstructor(tag, _extends, BaseHTMLElement, CustomElementClass);
 	}
 
 	// Setup return value as register() method, with upgrade methods hung off it.
