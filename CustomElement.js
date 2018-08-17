@@ -2,12 +2,18 @@
 define([
 	"dcl/advise",
 	"dcl/dcl",
-	"decor/Observable",
 	"decor/Destroyable",
 	"decor/Stateful",
 	"requirejs-dplugins/has",
 	"./on"
-], function (advise, dcl, Observable, Destroyable, Stateful, has, on) {
+], function (
+	advise,
+	dcl,
+	Destroyable,
+	Stateful,
+	has,
+	on
+) {
 
 	/**
 	 * Dispatched after the CustomElement has been attached.
@@ -102,10 +108,6 @@ define([
 
 			after: function () {
 				this.created = true;
-
-				if (this.deliver) {
-					this.deliver();
-				}
 			}
 		}),
 
