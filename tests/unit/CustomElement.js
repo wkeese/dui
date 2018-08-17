@@ -286,8 +286,8 @@ define([
 		// Test that we can observe changes to other native properties like tabIndex, dir, etc
 		"observing native properties": {
 			setup: function () {
-				TestNativeProps = register("test-native-props", [HTMLInputElement, CustomElement], {
-					name: "hello",
+				TestNativeProps = register("test-native-props", [HTMLElement, CustomElement], {
+					lang: "hello",
 					title: "world",
 					constructor: function () {
 						this.observe(function (oldProps) {
@@ -302,37 +302,38 @@ define([
 			programmatic: function () {
 				var myCustomElement = new TestNativeProps({
 					title: "new title",
-					name: "new name"
+					lang: "new lang"
 				});
 				container.appendChild(myCustomElement);
 				myCustomElement.connectedCallback();
 				assert.strictEqual(myCustomElement._title, "new title");
-				assert.strictEqual(myCustomElement._name, "new name");
+				assert.strictEqual(myCustomElement._lang, "new lang");
 
 				// test setting native props and then calling deliver
 				myCustomElement.title = "new title 2";
-				myCustomElement.name = "new name 2";
+				myCustomElement.lang = "new lang 2";
 				myCustomElement.deliver();
 				assert.strictEqual(myCustomElement._title, "new title 2");
-				assert.strictEqual(myCustomElement._name, "new name 2");
+				assert.strictEqual(myCustomElement._lang, "new lang 2");
 
 				// test setting native props without calling deliver
 				myCustomElement.title = "new title 3";
-				myCustomElement.name = "new name 3";
+				myCustomElement.lang = "new lang 3";
 				setTimeout(this.async().callback(function () {
 					assert.strictEqual(myCustomElement._title, "new title 3");
-					assert.strictEqual(myCustomElement._name, "new name 3");
+					assert.strictEqual(myCustomElement._lang, "new lang 3");
 				}), 10);
 			},
 
 			declarative: function () {
-				container.innerHTML = "<input is='test-native-props' id=nativePropsTest name=name1 title=title1>";
+				container.innerHTML =
+					"<test-native-props id=nativePropsTest lang=lang1 title=title1></test-native-props>";
 
 				setTimeout(this.async().callback(function () {
 					var declarative = document.getElementById("nativePropsTest");
 
 					assert.strictEqual(declarative._title, "title1");
-					assert.strictEqual(declarative._name, "name1");
+					assert.strictEqual(declarative._lang, "lang1");
 				}), 0);
 			}
 		},
