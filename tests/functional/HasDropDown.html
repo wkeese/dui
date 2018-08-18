@@ -6,6 +6,12 @@
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<title>HasDropDown tests</title>
 	<style>
+		.button {
+			display: inline-block;
+			border: solid 1px black;
+			background: #e5e5e5;
+			margin: 5px;
+		}
 		/*
 		The popup has to have some display type where you can set the width.
 		Perhaps this should be done in global.less but I didn't want to hard code the display type to "block"
@@ -184,6 +190,7 @@
 				}),
 
 				render: function () {
+					this.className="button";
 					this.tabIndex = "0";
 				},
 
@@ -204,6 +211,7 @@
 			// A button that emits the delite-display-load event to get a reference to the dropdown
 			var EventsDropDownButton = register("events-drop-down-button", [HTMLElement, HasDropDown], {
 				render: function () {
+					this.className="button";
 					this.tabIndex = "0";
 				},
 				
@@ -263,6 +271,10 @@
 			// A non-focusable "button" that shows a popup.
 			// Should work for mouse, although not for keyboard.
 			var NonFocusableDropDownButton = register("non-focusable-drop-down-button", [HTMLElement, HasDropDown], {
+				render: function () {
+					this.className = "button";
+				},
+
 				label: dcl.prop({
 					set: function (val) {
 						this.textContent = val;
@@ -287,7 +299,7 @@
 					left.textContent = "left";
 					this.appendChild(left);
 
-					this.appendChild(SimpleDropDownButton({
+					this.appendChild(new SimpleDropDownButton({
 						id: "cbr",
 						label: "right",
 						aroundNode: this,	// dropdown should extend length of the whole ComboButton

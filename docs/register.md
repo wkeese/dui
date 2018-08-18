@@ -58,26 +58,7 @@ from the custom elements standards.
 
 As mentioned above, the first extension must be a class/constructor function that has `HTMLElement` in its prototype
 chain.  This will serve as the base element for the custom element that is part of your widget.  `HTMLElement` has an
-interface that is roughly equivalent to the `<div>` tag and is the ancestor of all the HTML* DOM Elements.  If your
-widget doesn't need any special features offered by other tags, `HTMLElement` is likely your best base for your widget.
-
-If your widget through is designed to be an "extension" of another HTML element, for example a `<button>`, then you
-should consider utilising a different base for your widget.  This will ensure your widget will "behave" like that other
-root HTML element.  For example, to create something that extends a `<button>`, you would do something like this:
-
-```js
-require(["delite/register", "delite/Widget"], function (register, Widget) {
-	var MyButton = register("my-widget", [HTMLButtonElement, Widget], {
-		foo: "bar"
-	});
-});
-```
-
-And if you then wanted to instantiate this widget in HTML, you would use the following in markup:
-
-```html
-<button is="my-button"></button>
-```
+interface that is roughly equivalent to the `<div>` tag and is the ancestor of all the HTML* DOM Elements.
 
 You can also extend other widgets, but not base classes like [`delite/Widget`](Widget.md) that don't have `HTMLElement` in their
 prototype chain.  If you are subclassing another widget, you should just use that as the base instead of one of the
@@ -100,13 +81,8 @@ var mybutton1 = new MyButtonSubClass();
 or declaratively via HTML using the `is` attribute:
 
 ```html
-<button is="my-button-subclass"></button>
+<my-button-subclass></my-button-subclass>
 ```
-
-Because `deliteful/Button` has `HTMLButtonElement` as its base, it means that any subclasses need to utilise that root
-tag when instantiating via element creation.  This means you should know if the widget you are descending from builds
-on top of a base other than `HTMLElement`.
-
 
 ## Standards
 

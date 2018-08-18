@@ -35,7 +35,6 @@ define([
 						assert.notStrictEqual(index, "1", "focus didn't move to drop down");
 					})
 					.execute(function () {
-						// note: "return node.getBoundingClientRect();" doesn't work on IE; webdriver bug.
 						var anchor = document.getElementById("dd").getBoundingClientRect();
 						var dropDown = document.getElementById("dd_popup").getBoundingClientRect();
 						return {
@@ -110,7 +109,6 @@ define([
 						var anchor = document.querySelector("delayed-drop-down-button");
 						var dropDown = document.querySelector(".dropdown-dialog");
 
-						// note: "return node.getBoundingClientRect();" doesn't work on IE; webdriver bug.
 						var anchorRect = anchor.getBoundingClientRect();
 						var dropDownRect = dropDown.getBoundingClientRect();
 
@@ -242,7 +240,6 @@ define([
 							assert(visible, "visible");
 						})
 						.execute(function () {
-							// note: "return node.getBoundingClientRect();" doesn't work on IE; webdriver bug.
 							var anchor = document.getElementById("nawl").getBoundingClientRect();
 							var dropDown = document.getElementById("nawl_popup").getBoundingClientRect();
 							return {
@@ -255,32 +252,27 @@ define([
 								", dropDown = " + pos.dropDown.left);
 							assert(pos.anchor.width > pos.dropDown.width, "anchor wider than drop down");
 						})
-						.click()	// click to close popup
+						.click()		// close popup
 						.end();
 			},
 
 			"alignment - right": function () {
 				return this.remote
-					.findById("nawr")
-					.click()
+					.findById("nawr").click().end()
 					.execute(function () {
-						// note: "return node.getBoundingClientRect();" doesn't work on IE; webdriver bug.
 						var anchor = document.getElementById("nawr").getBoundingClientRect();
 						var dropDown = document.getElementById("nawr_popup").getBoundingClientRect();
 						return {
-							anchor: {left: anchor.left, width: anchor.width},
-							dropDown: {left: dropDown.left, width: dropDown.width}
+							anchor: {right: anchor.right, width: anchor.width},
+							dropDown: {right: dropDown.right, width: dropDown.width}
 						};
 					}).then(function (pos) {
-						assert(Math.abs((pos.anchor.left + pos.anchor.width) -
-							(pos.dropDown.left + pos.dropDown.width)) < 1, "drop down and anchor right aligned: " +
-							(pos.anchor.left + pos.anchor.width) + " vs " + (pos.dropDown.left + pos.dropDown.width));
+						assert(Math.abs(pos.anchor.right - pos.dropDown.right) < 1,
+							"drop down and anchor right aligned, anchor = " + pos.anchor.right  +
+							", dropDown = " + pos.dropDown.right);
 						assert(pos.anchor.width > pos.dropDown.width, "anchor wider than drop down");
 					})
-					// Click HasDropDown button again to close popup.  Note that this could be interpreted
-					// as a double click?
-					.click()
-					.end();
+					.findById("nawr").click().end();	// close popup
 			}
 		},
 

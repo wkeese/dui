@@ -15,6 +15,13 @@
 		margin: 0;
 	}
 
+	.button {
+		display: inline-block;
+		margin: 5px;
+		border: solid 1px black;
+		background: #e5e5e5;
+	}
+
 	div {
 		border: solid 1px gray;
 	}
@@ -64,7 +71,12 @@ require([
 
 	// A button that shows a popup.
 	// Supply popup as parameter when instantiating this widget.
-	var SimpleDropDownButton = register("simple-dropdown-button", [HTMLButtonElement, Widget], {
+	var SimpleDropDownButton = register("simple-dropdown-button", [HTMLElement, Widget], {
+		render: function () {
+			this.className = "button";
+			this.tabIndex = "0";
+		},
+		
 		label: dcl.prop({
 			set: function (val) {
 				this.textContent = val;

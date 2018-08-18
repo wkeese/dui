@@ -217,7 +217,6 @@ define([
 			});
 
 			container.innerHTML = "<div>" +
-				"<button is='test-extended-button-widget' id=ebw2>hello</button>" +
 				"<span>random node</span>" +
 				"<test-parser-widget id=pw></test-parser-widget>" +
 				"</div>";
