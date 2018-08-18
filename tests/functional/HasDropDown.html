@@ -132,11 +132,6 @@
 
 			// A list of values that doesn't get focus; focus remains on the HasDropDown widget.
 			var NonFocusMenu = register("non-focus-menu", [HTMLElement, MenuBase], {
-				onOpen: function () {
-					this._select(this.firstChild);
-
-				},
-
 				_select: function (child) {
 					if (this.selected) {
 						this.selected.className = "";
@@ -145,11 +140,14 @@
 					child.className = "selected";
 				},
 
-				postRender: function () {
+				constructor: function () {
 					this.on("keydown", this._keydownHandler.bind(this));
 					this.ownerDocument.addEventListener("delite-before-show", function (evt) {
+						// Hack this to delay running until after the menu has rendered its children...
 						if (evt.child === this) {
-							this._select(this.firstChild);
+							this.defer(function () {
+								this._select(this.firstChild);
+							}, 10);
 						}
 					}.bind(this));
 				},
@@ -175,7 +173,7 @@
 			});
 
 			// A button that shows a popup
-			var SimpleDropDownButton = register("simple-drop-down-button", [HTMLButtonElement, HasDropDown], {
+			var SimpleDropDownButton = register("simple-drop-down-button", [HTMLElement, HasDropDown], {
 				label: dcl.prop({
 					set: function (val) {
 						this.textContent = val;
@@ -184,6 +182,10 @@
 						return this.textContent;
 					}
 				}),
+
+				render: function () {
+					this.tabIndex = "0";
+				},
 
 				loadDropDown: function () {
 					if (!this._dropDown) {
@@ -200,7 +202,11 @@
 			});
 
 			// A button that emits the delite-display-load event to get a reference to the dropdown
-			var EventsDropDownButton = register("events-drop-down-button", [HTMLButtonElement, HasDropDown], {
+			var EventsDropDownButton = register("events-drop-down-button", [HTMLElement, HasDropDown], {
+				render: function () {
+					this.tabIndex = "0";
+				},
+				
 				label: dcl.prop({
 					set: function (val) {
 						this.textContent = val;
@@ -211,16 +217,25 @@
 				})
 			});
 
-			// A button that shows a popup
-			var ComboBox = register("combo-box", [HTMLInputElement, HasDropDown], {
+			// An <input> that shows a popup
+			var ComboBox = register("combo-box", [HTMLElement, HasDropDown], {
 				dropDownConstructor: NonFocusMenu,
 
-				// focus should always remain on the Combobox <input>
+				// focus should always remain on the Combobox
 				focusOnPointerOpen: false,
 				focusOnKeyboardOpen: false,
 
 				dropDownType: "listbox",
-				
+
+				render: function () {
+					this.innerHTML = "<input>";
+					this.focusNode = this.firstChild;
+				},
+
+				focus: function () {
+					this.focusNode.focus();
+				},
+
 				loadDropDown: function () {
 					return this._dropDown || (this._dropDown = new this.dropDownConstructor({
 						id: this.id + "_popup"

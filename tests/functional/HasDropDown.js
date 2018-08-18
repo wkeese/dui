@@ -97,7 +97,7 @@ define([
 
 		"dropdown dialog": function () {
 			return this.remote
-				.findByCssSelector("button[is=delayed-drop-down-button]").click().end()
+				.findByCssSelector("delayed-drop-down-button").click().end()
 				.setFindTimeout(intern.config.WAIT_TIMEOUT)	// takes 500ms for dropdown to appear first time
 				.findByClassName("dropdown-dialog")
 					.isDisplayed().then(function (visible) {
@@ -107,7 +107,7 @@ define([
 						assert.strictEqual(tag, "input", "focus moved to dialog's <input>");
 					})
 					.execute(function () {
-						var anchor = document.querySelector("button[is=delayed-drop-down-button]");
+						var anchor = document.querySelector("delayed-drop-down-button");
 						var dropDown = document.querySelector(".dropdown-dialog");
 
 						// note: "return node.getBoundingClientRect();" doesn't work on IE; webdriver bug.
@@ -146,7 +146,7 @@ define([
 					})
 					.end()
 				// reopen drop down by clicking DropDownButton again
-				.findByCssSelector("button[is=delayed-drop-down-button]").click().end()
+				.findByCssSelector("delayed-drop-down-button").click().end()
 				.findByClassName("dropdown-dialog")
 					.isDisplayed().then(function (visible) {
 						assert(visible, "visible again");
