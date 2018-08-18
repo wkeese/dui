@@ -177,13 +177,14 @@ define([
 			if (typeof Reflect === "object") {
 				elem = Reflect.construct(BaseHTMLElement, [], Constructor);
 			} else {
-				// TODO: Try Object.create() too, see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct
+				// TODO: Try Object.create() too, see
+				// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct
 				elem = BaseHTMLElement.call(this);
 				Object.setPrototypeOf(elem, Constructor.prototype);
 			}
 
 			CustomElementClass.prototype.constructor.apply(elem, arguments);
-			// TODO: Try  CustomElementClass.apply(elem, arguments) instead.
+			// TODO: Try CustomElementClass.apply(elem, arguments) instead.
 			return elem;
 		};
 		Object.setPrototypeOf(Constructor.prototype, CustomElementClass.prototype);

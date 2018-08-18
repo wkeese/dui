@@ -11,7 +11,7 @@ define([
 	// The <div> node where we will put all our DOM nodes
 	var container;
 
-	var Mixin, TestWidget, TestButtonWidget, TestExtendedWidget, TestExtendedButtonWidget;
+	var Mixin, TestWidget, TestExtendedWidget;
 
 	registerSuite({
 		name: "register",

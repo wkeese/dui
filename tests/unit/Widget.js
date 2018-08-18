@@ -379,16 +379,16 @@ define([
 				</div> \
 				<div id='not-a-widget'></div>";
 
-			setTimeout(this.async().callback(function () {
-				assert.strictEqual(Widget.prototype.getEnclosingWidget(document.getElementById("not-a-widget")), null,
-					"not-a-widget");
-				assert.strictEqual(Widget.prototype.getEnclosingWidget(document.getElementById("three")).name, "your",
-					"three");
-				assert.strictEqual(Widget.prototype.getEnclosingWidget(document.getElementById("three.one")).name, "your",
-					"three.one");
-				assert.strictEqual(Widget.prototype.getEnclosingWidget(document.getElementById("three.one.one")).name,
-					"your", "three.one.one");
-			}), 0);
+			register.deliver();
+
+			assert.strictEqual(Widget.prototype.getEnclosingWidget(document.getElementById("not-a-widget")), null,
+				"not-a-widget");
+			assert.strictEqual(Widget.prototype.getEnclosingWidget(document.getElementById("three")).name, "your",
+				"three");
+			assert.strictEqual(Widget.prototype.getEnclosingWidget(document.getElementById("three.one")).name, "your",
+				"three.one");
+			assert.strictEqual(Widget.prototype.getEnclosingWidget(document.getElementById("three.one.one")).name,
+				"your", "three.one.one");
 		},
 
 		"#getParent": function () {

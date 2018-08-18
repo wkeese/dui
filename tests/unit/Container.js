@@ -306,26 +306,25 @@ define([
 					"<span>child 1</span> <span>child 2</span> <span>child 3</span>" +
 				"</dynamic-template-container>";
 			document.body.appendChild(container);
+			register.deliver();
 
-			setTimeout(this.async().callback(function () {
-				var myWidget = container.children[0];
-				assert.strictEqual(myWidget.children[0], myWidget.labelNode, "reversed=false, first child");
-				assert.strictEqual(myWidget.children[1], myWidget.containerNode, "reversed=false, second child");
-				assert.deepEqual(getStrings(myWidget.getChildren()), ["child 1", "child 2", "child 3"], "getChildren()");
-				assert.strictEqual(myWidget.textContent.trim(), "my label: child 1 child 2 child 3");
+			var myWidget = container.children[0];
+			assert.strictEqual(myWidget.children[0], myWidget.labelNode, "reversed=false, first child");
+			assert.strictEqual(myWidget.children[1], myWidget.containerNode, "reversed=false, second child");
+			assert.deepEqual(getStrings(myWidget.getChildren()), ["child 1", "child 2", "child 3"], "getChildren()");
+			assert.strictEqual(myWidget.textContent.trim(), "my label: child 1 child 2 child 3");
 
-				// Then test that children moved when widget template changed.
-				myWidget.reversed = true;
-				myWidget.label = "reversed";
-				myWidget.deliver();
-				assert.strictEqual(myWidget.children[0], myWidget.containerNode, "reversed=true, first child");
-				assert.strictEqual(myWidget.children[1], myWidget.labelNode, "reversed=true, second child");
-				assert.deepEqual(getStrings(myWidget.getChildren()), ["child 1", "child 2", "child 3"], "getChildren()");
-				assert.strictEqual(myWidget.textContent.trim(), "child 1 child 2 child 3 reversed");
+			// Then test that children moved when widget template changed.
+			myWidget.reversed = true;
+			myWidget.label = "reversed";
+			myWidget.deliver();
+			assert.strictEqual(myWidget.children[0], myWidget.containerNode, "reversed=true, first child");
+			assert.strictEqual(myWidget.children[1], myWidget.labelNode, "reversed=true, second child");
+			assert.deepEqual(getStrings(myWidget.getChildren()), ["child 1", "child 2", "child 3"], "getChildren()");
+			assert.strictEqual(myWidget.textContent.trim(), "child 1 child 2 child 3 reversed");
 
-				// cleanup
-				container.parentNode.removeChild(container);
-			}), 0);
+			// cleanup
+			container.parentNode.removeChild(container);
 		}
 	});
 });
