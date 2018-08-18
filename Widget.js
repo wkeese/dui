@@ -74,6 +74,11 @@ define([
 			this.widgetId = "d-" + (++cnt);
 		},
 
+		// Setup deliver() as a way to force the widget to render before it's attached to the document.
+		deliver: dcl.after(function () {
+			this.initializeInvalidating();
+		}),
+
 		// Override decor/Sateful#processConstructorParameters() for special handle of style etc.
 		processConstructorParameters: function (args) {
 			if (args.length) {
@@ -105,7 +110,6 @@ define([
 			return !this.rendered || "template" in oldVals;
 		},
 
-		// TODO: Delay this until connectedCAllback()
 		initializeRendering: function () {
 			this.rendered = false;
 			this.preRender();
@@ -144,11 +148,6 @@ define([
 
 		connectedCallback: dcl.after(function () {
 			this.initializeInvalidating();
-
-			// Call connectedCallback() on any widgets in the template
-			if (this._templateHandle && !has("document-register-element")) {
-				this._templateHandle.attach();
-			}
 		}),
 
 		/**
@@ -184,7 +183,7 @@ define([
 
 			// Render the widget.
 			if (this.template) {
-				this._templateHandle = this.template(this.ownerDocument, register);
+				this._templateHandle = this.template();
 				if (this.attached && !has("document-register-element")) {
 					this._templateHandle.attach();
 				}
@@ -339,6 +338,7 @@ define([
 
 			if (!this.attached) {
 				// run attach code for this widget and any descendant custom elements too
+				// TODO: switch to call deliver() instead?
 				this.connectedCallback(true);
 			}
 
