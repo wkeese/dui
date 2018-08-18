@@ -89,8 +89,11 @@ define([
 			return item;
 		},
 
-		createdCallback: function () {
+		constructor: function () {
 			// If the control seems to contain JSON, then parse it as our data source.
+			// TODO: probably need to move this to connectedCallback, I'm not sure the
+			// text content is always available in constructor(), nor that you are
+			// allowed to clear it.
 			if (!this.firstElementChild && this.textContent.trim()) {
 				var data = JSON.parse("[" + this.textContent + "]");
 				if (data.length) {

@@ -124,7 +124,7 @@ require([
 
 	// A trivial popup widget
 	var SimplePopup = register("simple-popup", [HTMLElement, Widget], {
-		createdCallback: function () {
+		constructor: function () {
 			// on click, emit execute event so that popup closes
 			this.on("click", this._clickHandler.bind(this));
 		},
@@ -141,7 +141,7 @@ require([
 
 	// A popup that emits a change event, like a DatePicker.
 	var DatePicker = register("my-date-picker", [HTMLElement, Widget], {
-		createdCallback: function () {
+		constructor: function () {
 			// on click, emit execute event so that popup closes
 			this.on("click", this._clickHandler.bind(this));
 		},
@@ -166,7 +166,7 @@ require([
 
 	// A popup with a listener on the popup-after-position event to adjust arrows.
 	var Tooltip = register("test-tooltip", [HTMLElement, SimplePopup], {
-		createdCallback: function () {
+		constructor: function () {
 			this.popupAfterPositionEvents = [];
 			this.on("popup-after-position", this.orient.bind(this));
 		},

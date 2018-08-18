@@ -105,8 +105,8 @@ define([
 			// start it now.  Make sure to do this after widget has been
 			// inserted into the DOM tree, so it can see that it's being controlled by me,
 			// so it doesn't try to size itself.
-			if (this.attached && node.attachedCallback) {
-				node.attachedCallback();
+			if (this.attached && node.connectedCallback) {
+				node.connectedCallback();
 			}
 
 			this.emit("delite-add-child", {

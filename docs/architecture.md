@@ -73,7 +73,7 @@ Although we set up page level listeners for custom elements being attached/detac
 disabled as widgets are being instantiated.  This prevents a performance issue for widgets that internally
 create lots of elements, like charts.
 Therefore, custom elements that create other custom elements are responsible for creating those
-custom elements via javascript (`new MyWidget(...)`), and then calling `attachedCallback()` at the appropriate time.
+custom elements via javascript (`new MyWidget(...)`), and then calling `connectedCallback()` at the appropriate time.
 Note however that this is handled automatically for widgets in templates.
 
 Another decision was to not shim shadow DOM.  While shadow DOM a nice concept, it takes lots of code to shim,
@@ -124,14 +124,14 @@ Delite's template engine (handlebars!) is designed to be small and fast.
 There are two approaches to instantiating a template:
 
 * create each node programatically and chain them together programatically, i.e. use
-  `document.createElement()` or `register.createElement()`, `Element#setAttribute()`, direct property setting,
+  `document.createElement()`, `Element#setAttribute()`, direct property setting,
   `Element#appendChild()`, etc.
 * clone a DOM tree and then scan the cloned tree setting up event handlers, attach points, resolve
   bind variables, instantiate widgets in the template, etc.
 
 Delite uses the first technique, in order to avoid having to scan the cloned tree to setup event handlers etc.
 It also avoids some tricky issues where widgets in the template instantiate automatically on  browsers with native
-`document.registerElement()` support.
+custom element support.
 
 `delite/handlebars!` converts HTML text into an intermediate AST representation of the DOM, and
 then `delite/template` uses code generation to convert that intermediate form into two javascript functions:
@@ -141,7 +141,7 @@ The generated code to build the initial DOM will look like:
 
 ```js
 function(register){
-	var c1 = register.createElement('span');
+	var c1 = document.createElement('span');
 	this.setOrRemoveAttribute(c1, 'class', 'd-reset ' + (this.iconClass || ''));
 	this.appendChild(c1);
 	var c2t2 = document.createTextNode('\n\t' + (this.label || '') + '\n');
@@ -163,7 +163,6 @@ function(props){
 The advantages of using code generation rather than building from an AST are:
 
 * running the generated code is 3x faster
-* in a build, there's no library code needed besides the generated code
 * allows for the template to embed arbitrary javascript without needing our own javascript parser
   (essentially a subset of Esprima), and without needing to call `eval` at runtime
 

@@ -227,10 +227,36 @@ define([
 		return Constructor;
 	}
 
-	// Setup return value as register() method, with upgrade methods hung off it.
+	/**
+	 * Converts plain Element of custom type into "custom element", by adding the widget's custom methods, etc.
+	 * Does nothing if the Element has already been converted or if it doesn't correspond to a registered custom tag.
+	 * After the upgrade, calls `constructor()`.
+	 *
+	 * Usually the application will not need to call this method directly, because it's called automatically
+	 * on page load and as elements are added to the document.
+	 *
+	 * TODO: Unclear if this is doing anything useful, since it doesn't do anything on safari.
+	 *
+	 * @function module:delite/register.upgrade
+	 * @param {Element} element - The DOM node.
+	 * @param {boolean} [attach] - If `element`'s tag has been registered, but `attachedCallback()` hasn't yet been
+	 * called [since the last call to `detachedCallback()`], then call `attachedCallback()`.  Call even if the element
+	 * has already been upgraded.
+	 */
 	register.upgrade = function (elem) {
 		if (customElements.upgrade) {
 			customElements.upgrade(elem);
+		}
+	};
+
+	/**
+	 * Synchrously upgrade any custom tags in the document that have not yet been upgraded.
+	 * Nodes are automatically updated synchronously when the browser has native custom element support,
+	 * but only asynchronously when the polyfill is being used.  Should not be called before domReady event.
+	 */
+	register.deliver = function () {
+		if (customElements.upgrade) {
+			customElements.upgrade(document.body);
 		}
 	};
 
