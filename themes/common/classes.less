@@ -62,16 +62,26 @@
 	border: 0;
 	padding: 0;
 	.box-shadow(0 1px 5px rgba(0,0,0,0.25));
-	.box-sizing(border-box);
-}
 
-// And then the popup itself gets this styling.
-// Note that it needs to show a scrollbar if necessary, so it should set overflow:auto or extend Scrollable.
-.d-popup > * {
-	// we set the height and width on the wrapper, so the popup widget itself just needs to follow our lead
-	.box-sizing(border-box);
-	height: inherit;
-	width: inherit;
+	// Added this to try to fix overflow problem on IE11, where Dialog#containerNode is much
+	// taller than Dialog itself, see https://github.com/philipwalton/flexbugs/issues/216.
+	// However, it causes another problem (on IE11) where the Dialog is too wide.   It also
+	// depends on the d-popup node, which I want to eventually remove.
+	display: flex;
+	flex-direction: row;
+
+	// And then the popup itself gets this styling.
+	// Note that it needs to show a scrollbar if necessary, so it should set overflow:auto or extend Scrollable.
+	> * {
+		.box-sizing(border-box);
+	}
+	> .d-centered {
+		// By default, leave 5% margin on each side of centered dialog.
+		max-height: 90vh;
+		max-width: 90vh;
+
+		// TODO: iOS
+	}
 }
 
 .d-tooltip-dialog-popup, .d-date-picker-popup {

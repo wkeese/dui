@@ -11,7 +11,8 @@ define([
 	"./on",
 	"./place",
 	"./Viewport",
-	"./theme!" // d-popup class
+	"./theme!", // d-popup class
+	"./uacss"	// for iOS rules to reduce dialog size to account for virtual keyboard
 ], function (advise, dcl, BackgroundIframe, DialogUnderlay, has, on, place, Viewport) {
 
 	function isDocLtr(doc) {
@@ -505,35 +506,23 @@ define([
 				verticalMargin = parseFloat(cs.marginTop) + parseFloat(cs.marginBottom),
 				horizontalMargin = parseFloat(cs.marginLeft) + parseFloat(cs.marginRight);
 
-			if (measureSize) {
-				// Get natural size of popup (i.e. when not squashed to fit within viewport).  First, remove any
-				// previous size restriction set on popup.  Note that setting popups's height and width to "auto"
-				// erases scroll position, so should only be done when popup is first shown, before user has scrolled.
-				if (widget.style.cssText !== widget._originalStyle) {
-					widget.style.cssText = widget._originalStyle;
-				}
-
-				args._naturalHeight = widget.offsetHeight + verticalMargin;
-				args._naturalWidth = widget.offsetWidth + horizontalMargin;
-			}
-
 			if (orient[0] === "center") {
-				// Limit height and width so dialog fits within viewport.
-				var minSize = this.getMinCenteredPopupSize(widget),
-					maxSize = this.getMaxCenteredPopupSize(widget);
-				if (args._naturalHeight < minSize.h)  {
-					widget.style.height = minSize.h + "px";
-				}
-				if (args._naturalWidth < minSize.w)  {
-					widget.style.width = minSize.w + "px";
-				}
-				if (args._naturalHeight > maxSize.h)  {
-					widget.style.height = maxSize.h + "px";
-				}
-				if (args._naturalWidth > maxSize.w)  {
-					widget.style.width = maxSize.w + "px";
-				}
+				widget.classList.add("d-centered");
 			} else {
+				widget.classList.remove("d-centered");
+
+				if (measureSize) {
+					// Get natural size of popup (i.e. when not squashed to fit within viewport).  First, remove any
+					// previous size restriction set on popup.  Note that setting popups's height and width to "auto"
+					// erases scroll position, so should only be done when popup first shown, before user has scrolled.
+					if (widget.style.cssText !== widget._originalStyle) {
+						widget.style.cssText = widget._originalStyle;
+					}
+
+					args._naturalHeight = widget.offsetHeight + verticalMargin;
+					args._naturalWidth = widget.offsetWidth + horizontalMargin;
+				}
+
 				// Limit height to space available in viewport either above or below aroundNode (whichever side has
 				// more room).  This may make the popup widget display a scrollbar (or multiple scrollbars).
 				var maxHeight;
@@ -555,29 +544,6 @@ define([
 					widget.style.height = maxHeight - verticalMargin + "px";
 				}
 			}
-		},
-
-		/**
-		 * Overridable method to return the maximum size allowed for a centered popup,
-		 * presumably based on the viewport size.  Used to control how much margin is
-		 * displayed between the dialog border and the edges of the viewport.
-		 */
-		getMaxCenteredPopupSize: function (widget) {
-			var viewport = Viewport.getEffectiveBox(widget.ownerDocument);
-			return  {
-				w: Math.floor(viewport.w * 0.9),
-				h: Math.floor(viewport.h * 0.9)
-			};
-		},
-
-		/**
-		 * Overridable method to return the minimum size allowed for a centered popup.
-		 */
-		getMinCenteredPopupSize: function () {
-			return  {
-				w: 0,
-				h: 0
-			};
 		},
 
 		/**
