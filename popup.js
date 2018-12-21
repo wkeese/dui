@@ -517,12 +517,11 @@ define([
 				observer.takeRecords();
 			});
 			observer.observe(widget, {
-					attributes: true,
-					characterData: true,
-					childList: true,
-					subtree: true
-				}
-			);
+				attributes: true,
+				characterData: true,
+				childList: true,
+				subtree: true
+			});
 
 			var resizeTimer;
 			function startRepositionPolling() {
@@ -560,6 +559,13 @@ define([
 					};
 				});
 			}
+
+			// Stop recentering dialogs that the user has resized.
+			handlers.push(widget.on("delite-manually-resized", function (evt) {
+				if (evt.target === widget) {
+					args.resized = true;
+				}
+			}));
 
 			var stackEntry = Object.create(args);
 			stackEntry.wrapper = wrapper;
@@ -652,23 +658,27 @@ define([
 				ltr = args.parent ? args.parent.effectiveDir !== "rtl" : isDocLtr(widget.ownerDocument);
 
 			// position the wrapper node
-			if (args.draggedPos) {
-				// Don't recenter popups that have been dragged.
+			if (args.draggedPos || args.resized) {
+				// Don't recenter popups that have been dragged and/or manually resized.
 				var win = widget.ownerDocument.defaultView,
 					viewport = Viewport.getEffectiveBox(),
 					bcr = wrapper.getBoundingClientRect();
 
 				// Drag popup up and to the left if necessary because browser window is being shrunk.
-				if (args.draggedPos.top > viewport.h - bcr.height) {
-					args.draggedPos.top = viewport.h - bcr.height;
-				}
-				if (args.draggedPos.left > viewport.w - bcr.width) {
-					args.draggedPos.left = viewport.w - bcr.width;
-				}
+				var curTop = parseFloat(wrapper.style.top),
+					curLeft = parseFloat(wrapper.style.left),
+					maxTop = viewport.h - bcr.height,
+					maxLeft = viewport.w - bcr.width;
+				if (curTop > maxTop || curLeft > maxLeft) {
+					args.draggedPos = {
+						top: Math.min(curTop, maxTop),
+						left: Math.min(curLeft, maxLeft)
+					};
 
-				// Adjust for document scroll.  (Would be nicer if centered and dragged popups were position:fixed.)
-				wrapper.style.top = (args.draggedPos.top + win.pageYOffset) + "px";
-				wrapper.style.left = (args.draggedPos.left + win.pageXOffset) + "px";
+					// Adjust for document scroll.  (Would be nicer if centered and dragged popups were position:fixed.)
+					wrapper.style.top = (args.draggedPos.top + win.pageYOffset) + "px";
+					wrapper.style.left = (args.draggedPos.left + win.pageXOffset) + "px";
+				}
 			} else if (orient[0] === "center") {
 				place.center(wrapper);
 				widget.emit("popup-after-position");
