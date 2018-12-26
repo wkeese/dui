@@ -357,6 +357,9 @@ define([
 		 * popup.open({parent: this, popup: menuWidget, around: this, onClose: function(){...}});
 		 */
 		open: function (args) {
+			// Make copy of args so we don't modify original struct.
+			args = Object.create(args);
+
 			var eventNode = args.parent || document.body,
 				popup = args.popup;
 
@@ -550,10 +553,9 @@ define([
 				})
 			);
 
-			var stackEntry = Object.create(args);
-			stackEntry.wrapper = wrapper;
-			stackEntry.handlers = handlers;
-			stack.push(stackEntry);
+			args.wrapper = wrapper;
+			args.handlers = handlers;
+			stack.push(args);
 		},
 
 		/**
@@ -575,6 +577,9 @@ define([
 				if (minSize)  {
 					widget.style.minHeight = minSize.h + "px";
 					widget.style.minWidth = minSize.w + "px";
+				} else {
+					widget.style.removeProperty("min-height");
+					widget.style.removeProperty("min-width");
 				}
 
 				var maxSize = typeof widget.getMaxSize === "function" ? widget.getMaxSize() :
