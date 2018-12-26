@@ -616,7 +616,7 @@ define([
 		 * presumably based on the viewport size.  Used to control how much margin is
 		 * displayed between the dialog border and the edges of the viewport.
 		 */
-		getMaxCenteredPopupSize: function (widget) {
+		getMaxCenteredPopupSize: function () {
 			var viewport = Viewport.getEffectiveBox();
 			return  {
 				w: Math.floor(viewport.w * 0.9),
@@ -639,6 +639,7 @@ define([
 		 * @private
 		 */
 		_position: function (args) {
+			/* jshint maxcomplexity:11 */
 			var widget = args.popup,
 				wrapper = widget._popupWrapper,
 				around = args.around,
@@ -666,6 +667,8 @@ define([
 					wrapper.style.left = (left + win.pageXOffset) + "px";
 
 					args.dragged = true;
+
+					widget.emit("popup-after-position");
 				}
 			} else if (orient[0] === "center") {
 				place.center(wrapper);
