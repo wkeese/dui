@@ -544,20 +544,7 @@ define([
 
 			// Make the popup draggable.
 			if (args.dragHandle) {
-				args.moveable = new ParentConstrainedMoveable(wrapper, {
-					handle: args.dragHandle,
-					area: "padding",
-					within: true
-				});
-				advise.after(args.moveable, "onMoveStop", function () {
-					// Save the dragged position relative to the viewport.
-					// Make copy of result from getBoundingClientRect() in case _position() needs to modify value.
-					var bcr = wrapper.getBoundingClientRect();
-					args.draggedPos = {
-						top: bcr.top,
-						left: bcr.left
-					};
-				});
+				this.enableDrag(args);
 			}
 
 			// Stop recentering dialogs that the user has resized.
@@ -571,6 +558,37 @@ define([
 			stackEntry.wrapper = wrapper;
 			stackEntry.handlers = handlers;
 			stack.push(stackEntry);
+		},
+
+		/**
+		 * Make the popup draggable.
+		 * @param args
+		 */
+		enableDrag: function (args) {
+			if (!args.moveable) {
+				var widget = args.popup,
+					wrapper = this.moveOffScreen(widget);
+
+				args.moveable = new ParentConstrainedMoveable(wrapper, {
+					handle: args.dragHandle,
+					area: "padding",
+					within: true
+				});
+
+				advise.after(args.moveable, "onMoveStop", function () {
+					args.dragged = true;
+				});
+			}
+		},
+
+		/**
+		 * Remove ability to drag the popup.
+		 * @param args
+		 */
+		disableDrag: function (args) {
+			if (args.moveable) {
+				args.moveable.destroy();
+			}
 		},
 
 		/**
@@ -658,7 +676,7 @@ define([
 				ltr = args.parent ? args.parent.effectiveDir !== "rtl" : isDocLtr(widget.ownerDocument);
 
 			// position the wrapper node
-			if (args.draggedPos || args.resized) {
+			if (args.dragged || args.resized) {
 				// Don't recenter popups that have been dragged and/or manually resized.
 				var win = widget.ownerDocument.defaultView,
 					viewport = Viewport.getEffectiveBox(),
@@ -670,14 +688,14 @@ define([
 					maxTop = viewport.h - bcr.height,
 					maxLeft = viewport.w - bcr.width;
 				if (curTop > maxTop || curLeft > maxLeft) {
-					args.draggedPos = {
-						top: Math.min(curTop, maxTop),
-						left: Math.min(curLeft, maxLeft)
-					};
+					var top = Math.min(curTop, maxTop),
+						left = Math.min(curLeft, maxLeft);
 
 					// Adjust for document scroll.  (Would be nicer if centered and dragged popups were position:fixed.)
-					wrapper.style.top = (args.draggedPos.top + win.pageYOffset) + "px";
-					wrapper.style.left = (args.draggedPos.left + win.pageXOffset) + "px";
+					wrapper.style.top = (top + win.pageYOffset) + "px";
+					wrapper.style.left = (left + win.pageXOffset) + "px";
+
+					args.dragged = true;
 				}
 			} else if (orient[0] === "center") {
 				place.center(wrapper);
@@ -735,9 +753,8 @@ define([
 				}
 
 				if (top.moveable) {
-					top.moveable.destroy();
+					this.disableDrag(top);
 				}
-
 
 				// Hide the widget and its wrapper unless it has already been destroyed in above onClose() etc.
 				this.hide(widget);
