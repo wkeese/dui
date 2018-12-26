@@ -5,7 +5,6 @@
 define([
 	"dcl/advise",
 	"dcl/dcl",
-	"dojo/dnd/move",
 	"./BackgroundIframe",
 	"./DialogUnderlay",
 	"./features", // has("config-bgIframe")
@@ -16,7 +15,6 @@ define([
 ], function (
 	advise,
 	dcl,
-	move,
 	BackgroundIframe,
 	DialogUnderlay,
 	has,
@@ -153,8 +151,6 @@ define([
 	 * above or below the `aroundNode` or specified `x/y` position.
 	 * @property {boolean} underlay - If true, put a DialogUnderlay underneath this popup so that it can't be
 	 * closed by clicking on a blank part of the screen.
-	 * @property {Element} dragHandle - If specified, make the popup draggable by the specified element
-	 * (which should be a node inside of the popup, or perhaps the popup itself).
 	 */
 
 	/**
@@ -166,8 +162,6 @@ define([
 			delete this._popupWrapper;
 		}
 	}
-
-	var ParentConstrainedMoveable = move.parentConstrainedMoveable;
 
 	// TODO: convert from singleton to just a hash of functions; easier to doc that way.
 
@@ -542,53 +536,24 @@ define([
 				}
 			});
 
-			// Make the popup draggable.
-			if (args.dragHandle) {
-				this.enableDrag(args);
-			}
-
-			// Stop recentering dialogs that the user has resized.
-			handlers.push(widget.on("delite-manually-resized", function (evt) {
-				if (evt.target === widget) {
-					args.resized = true;
-				}
-			}));
+			// Stop recentering dialogs that the user has dragged or resized.
+			handlers.push(
+				widget.on("delite-dragged", function (evt) {
+					if (evt.target === widget) {
+						args.dragged = true;
+					}
+				}),
+				widget.on("delite-manually-resized", function (evt) {
+					if (evt.target === widget) {
+						args.resized = true;
+					}
+				})
+			);
 
 			var stackEntry = Object.create(args);
 			stackEntry.wrapper = wrapper;
 			stackEntry.handlers = handlers;
 			stack.push(stackEntry);
-		},
-
-		/**
-		 * Make the popup draggable.
-		 * @param args
-		 */
-		enableDrag: function (args) {
-			if (!args.moveable) {
-				var widget = args.popup,
-					wrapper = this.moveOffScreen(widget);
-
-				args.moveable = new ParentConstrainedMoveable(wrapper, {
-					handle: args.dragHandle,
-					area: "padding",
-					within: true
-				});
-
-				advise.after(args.moveable, "onMoveStop", function () {
-					args.dragged = true;
-				});
-			}
-		},
-
-		/**
-		 * Remove ability to drag the popup.
-		 * @param args
-		 */
-		disableDrag: function (args) {
-			if (args.moveable) {
-				args.moveable.destroy();
-			}
 		},
 
 		/**
