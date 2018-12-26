@@ -725,10 +725,6 @@ define([
 					h.remove();
 				}
 
-				if (top.moveable) {
-					this.disableDrag(top);
-				}
-
 				// Hide the widget and its wrapper unless it has already been destroyed in above onClose() etc.
 				this.hide(widget);
 				DialogUnderlay.hideFor(widget._popupWrapper);
