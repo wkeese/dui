@@ -156,7 +156,7 @@ define([
 	var PopupManager = dcl(/** @lends module:delite/popup */ {
 		/**
 		 * Stack of information about currently popped up widgets.
-		 * See `open()` method to see the properties set in each Object in this stack (widget, wrapper, etc)
+		 * See `open()` method to see the properties set in each Object in this stack (widget, etc)
 		 * (someone opened _stack[0], and then it opened _stack[1], etc.)
 		 * @member {*} PopupManager._stack
 		 */
@@ -224,67 +224,28 @@ define([
 		},
 
 		/**
-		 * Initialization for widgets that will be used as popups.
-		 * Puts widget inside a wrapper DIV (if not already in one), and returns pointer to that wrapper DIV.
-		 * @param {module:delite/Widget} widget
-		 * @returns {HTMLElement} The wrapper DIV.
-		 * @private
-		 */
-		createWrapper: function (widget) {
-			var wrapper = widget._popupWrapper;
-			if (!wrapper) {
-				// Create wrapper <div> for when this widget [in the future] will be used as a popup.
-				// This is done early because of IE bugs where creating/moving DOM nodes causes focus
-				// to go wonky, see tests/robot/Toolbar.html to reproduce
-				wrapper = widget._popupWrapper = widget.ownerDocument.createElement("div");
-				wrapper.className = "d-popup";
-				wrapper.style.display = "none";
-				wrapper.setAttribute("role", "region");
-				wrapper.setAttribute("aria-label", widget["aria-label"] || widget.label || widget.name || widget.id);
-				widget.ownerDocument.body.appendChild(wrapper);
-
-				wrapper.appendChild(widget);
-				widget.connectedCallback();
-
-				// Original popup widget might be hidden (so user doesn't see it prematurely).
-				// Clear that CSS now.  The wrapper itself is hidden.
-				if (widget.style.display === "none") {
-					widget.style.display = "";
-				}
-				if (widget.style.visibility === "hidden") {
-					widget.style.visibility = "";
-				}
-				widget.classList.remove("d-hidden");
-				widget.classList.remove("d-invisible");
-				widget.classList.remove("d-offscreen");
-
-				// Destroy wrapper when popup widget is destroyed.
-				widget.own({
-					destroy: function destroyWrapper() {
-						if (widget._popupWrapper) {
-							widget._popupWrapper.parentNode.removeChild(widget._popupWrapper);
-							delete widget._popupWrapper;
-						}
-					}
-				});
-			}
-
-			return wrapper;
-		},
-
-		/**
 		 * Moves the popup widget off-screen.  Do not use this method to hide popups when not in use, because
 		 * that will create an accessibility issue: the offscreen popup will still be in the tabbing order.
 		 * @param {module:delite/Widget} widget
 		 * @returns {HTMLElement}
 		 */
 		moveOffScreen: function (widget) {
-			// Create wrapper if not already there, then besides setting visibility:hidden,
-			// move it out of the viewport, see #5776, #10111, #13604
-			var wrapper = this.createWrapper(widget);
-			wrapper.style.display = "";
-			wrapper.classList.add("d-offscreen");
-			return wrapper;
+			var body =  widget.ownerDocument.body;
+			if (widget.parentNode !== body) {
+				body.appendChild(widget);
+			}
+
+			widget.classList.add("d-popup");
+			widget.classList.add("d-offscreen");
+			widget.classList.remove("d-hidden");
+			widget.classList.remove("d-invisible");
+
+			if (widget.style.display === "none") {
+				widget.style.display = "";
+			}
+			if (widget.style.visibility === "hidden") {
+				widget.style.visibility = "";
+			}
 		},
 
 		/**
@@ -292,11 +253,7 @@ define([
 		 * @param {module:delite/Widget} widget
 		 */
 		detach: function (widget) {
-			if (widget._popupWrapper) {
-				widget._popupWrapper.parentNode.removeChild(widget._popupWrapper);
-				delete widget._popupWrapper;
-				widget.disconnectedCallback();
-			} else if (widget.parentNode) {
+			if (widget.parentNode) {
 				widget.parentNode.removeChild(widget);
 				widget.disconnectedCallback();
 			}
@@ -306,8 +263,6 @@ define([
 		 * Hide this popup widget (until it is ready to be shown).
 		 * Initialization for widgets that will be used as popups.
 		 *
-		 * Also puts widget inside a wrapper DIV (if not already in one).
-		 *
 		 * If popup widget needs to layout it should do so when it is made visible,
 		 * and popup._onShow() is called.
 		 * @param {module:delite/Widget} widget
@@ -315,11 +270,8 @@ define([
 		hide: function (widget) {
 			widget.emit("popup-before-hide");
 
-			// Create wrapper if not already there
-			var wrapper = this.createWrapper(widget);
-
-			wrapper.style.display = "none";
-			wrapper.style.height = "auto";		// Open may have limited the height to fit in the viewport
+			widget.style.display = "none";
+			widget.style.height = "auto";		// Open may have limited the height to fit in the viewport
 		},
 
 		/**
@@ -407,20 +359,10 @@ define([
 				this.close(stack[stack.length - 1].popup);
 			}
 
-			// Get reference to popup wrapper, and create wrapper if it doesn't exist.  Remove display:none (but keep
-			// off screen) so we can do sizing calculations.
-			var wrapper = this.moveOffScreen(widget);
-
-			var wrapperClasses = ["d-popup"];
-			((widget.baseClass || "") + " " + widget.className).split(/ +/).forEach(function (cls) {
-				if (cls) {
-					wrapperClasses.push(cls + "-popup");
-				}
-			});
-			wrapper.id = widget.id + "_wrapper";
-			wrapper.className = wrapperClasses.join(" ");
-			wrapper.style.zIndex = this._beginZIndex + stack.length * 2;   // *2 leaves z-index slot for DialogUnderlay
-			wrapper._popupParent = args.parent ? args.parent : null;
+			// Remove display:none (but keep off screen) so we can do sizing calculations.
+			this.moveOffScreen(widget);
+			widget.style.zIndex = this._beginZIndex + stack.length * 2;   // *2 leaves z-index slot for DialogUnderlay
+			widget._popupParent = args.parent ? args.parent : null;
 
 			if (stack.length === 0 && around) {
 				// First element on stack. Save position of aroundNode and setup listener for changes to that position.
@@ -431,10 +373,9 @@ define([
 
 			if (has("config-bgIframe") && !widget.bgIframe) {
 				// setting widget.bgIframe triggers cleanup in Widget.destroy()
-				widget.bgIframe = new BackgroundIframe(wrapper);
+				widget.bgIframe = new BackgroundIframe(widget);
 			}
 
-			wrapper.style.visibility = "visible";
 			widget.style.visibility = "visible";	// counteract effects from HasDropDown
 
 			var handlers = [];
@@ -448,10 +389,10 @@ define([
 					args.onCancel();
 				}
 			}.bind(this);
-			wrapper.addEventListener("keydown", onKeyDown);
+			widget.addEventListener("keydown", onKeyDown);
 			handlers.push({
 				remove: function () {
-					wrapper.removeEventListener("keydown", onKeyDown);
+					widget.removeEventListener("keydown", onKeyDown);
 				}
 			});
 
@@ -548,7 +489,6 @@ define([
 				})
 			);
 
-			args.wrapper = wrapper;
 			args.handlers = handlers;
 			stack.push(args);
 		},
@@ -636,21 +576,20 @@ define([
 		_position: function (args) {
 			/* jshint maxcomplexity:11 */
 			var widget = args.popup,
-				wrapper = widget._popupWrapper,
 				around = args.around,
 				orient = this._getOrient(args),
 				ltr = args.parent ? args.parent.effectiveDir !== "rtl" : isDocLtr(widget.ownerDocument);
 
-			// position the wrapper node
+			// position the widget
 			if (orient[0] === "center") {
 				if (!args.dragged && !args.resized) {
-					place.center(wrapper);
+					place.center(widget);
 					widget.emit("popup-after-position");
 				}
 			} else {
 				var position = around ?
-					place.around(wrapper, around, orient, ltr) :
-					place.at(wrapper, args, orient === "R" ? ["TR", "BR", "TL", "BL"] : ["TL", "BL", "TR", "BR"],
+					place.around(widget, around, orient, ltr) :
+					place.at(widget, args, orient === "R" ? ["TR", "BR", "TL", "BL"] : ["TL", "BL", "TR", "BR"],
 						args.padding);
 
 				// Emit event telling popup that it was [re]positioned.
@@ -664,7 +603,7 @@ define([
 			// Setup underlay for popups that want one.  By default it's done for centered popups,
 			// but args can explicitly specify underlay=true or underlay=false.
 			if ("underlay" in args ? args.underlay : (orient[0] === "center")) {
-				DialogUnderlay.showFor(wrapper);
+				DialogUnderlay.showFor(widget);
 			}
 		},
 
@@ -674,10 +613,9 @@ define([
 		 */
 		moveFullyIntoView: function (widget) {
 			var viewport = Viewport.getEffectiveBox(),
-				wrapper = this.createWrapper(widget),
-				bcr = wrapper.getBoundingClientRect(),
-				curTop = parseFloat(wrapper.style.top),
-				curLeft = parseFloat(wrapper.style.left),
+				bcr = widget.getBoundingClientRect(),
+				curTop = parseFloat(widget.style.top),
+				curLeft = parseFloat(widget.style.left),
 				minTop = viewport.t,
 				minLeft = viewport.l,
 				maxTop = Math.max(viewport.t + viewport.h - bcr.height, 0),
@@ -686,8 +624,8 @@ define([
 			if (curTop < 0 || curTop > maxTop || curLeft < minLeft || curLeft > maxLeft) {
 				var top = Math.min(Math.max(curTop, minTop), maxTop),
 					left = Math.min(Math.max(curLeft, minLeft), maxLeft);
-				wrapper.style.top = top  + "px";
-				wrapper.style.left = left + "px";
+				widget.style.top = top  + "px";
+				widget.style.left = left + "px";
 
 				wrapper.emit("popup-after-position");
 			}
@@ -724,9 +662,9 @@ define([
 					h.remove();
 				}
 
-				// Hide the widget and its wrapper unless it has already been destroyed in above onClose() etc.
+				// Hide the widget unless it has already been destroyed in above onClose() etc.
 				this.hide(widget);
-				DialogUnderlay.hideFor(widget._popupWrapper);
+				DialogUnderlay.hideFor(widget);
 
 				if (onClose) {
 					onClose();

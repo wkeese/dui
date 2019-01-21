@@ -42,15 +42,7 @@ define([
 					.isDisplayed().then(function (displayed) {
 						assert.isTrue(displayed, "choiceDropDown popup visible");
 					})
-					.end()
-				.findById("choiceDropDown_wrapper")	// parent of choiceDropDown
-				.getAttribute("role").then(function (role) {
-					assert.strictEqual(role, "region", "popup's wrapper node needs role=region");
-				})
-				.getAttribute("aria-label").then(function (label) {
-					assert.strictEqual(label, "choiceDropDown", "popup's wrapper node needs aria-label");
-				})
-				.end();
+					.end();
 		},
 
 		"close popup on the edge of another widget": function () {
@@ -240,11 +232,12 @@ define([
 					.findById("tallChoiceDropDownButton")
 						.click()
 						.end()
-					.execute("return [getComputedStyle(tallChoiceDropDown).height.replace(/px/, ''), " +
-						"document.documentElement.clientHeight, " +
-						"getComputedStyle(tallChoiceDropDown.parentNode).height.replace(/px/, '')];")
-					.then(function (value) {
-						assert.isTrue(value[2] < value[1], "tallChoiceDropDown wrapper is not shorter than viewport");
+					.execute(function () {
+						return [
+							getComputedStyle(window.tallChoiceDropDown).height.replace(/px/, ""),
+							document.documentElement.clientHeight
+						];
+					}).then(function (value) {
 						assert.isTrue(value[0] < value[1], "tallChoiceDropDown popup is not shorter than the viewport");
 					});
 			}

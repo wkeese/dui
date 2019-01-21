@@ -83,7 +83,7 @@ define([
 		},
 
 		teardown: function () {
-			document.body.removeChild(myMenu.parentNode);	// .parentNode due to delite/popup adding wrapper
+			document.body.removeChild(myMenu);
 			document.body.removeChild(anchorNode);
 		}
 	});

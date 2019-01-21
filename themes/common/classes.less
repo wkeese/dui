@@ -2,7 +2,7 @@
 // ----------------------------------------------
 // CSS classes common to all themes
 // ----------------------------------------------
-// * class MUST NOT depends on theme variables.
+// * Classes MUST NOT depend on theme variables.
 // * DO NOT define tag selectors here.
 // ----------------------------------------------
 
@@ -54,22 +54,20 @@
 	}
 }
 
-// Popup items have a wrapper div (d-popup) with the real popup inside, and maybe an iframe too
+// Applied to element display as a dropdown or popup.
 .d-popup {
 	position: absolute;
-	display: flex;    // needed by IE11 when child is display:flex
 	margin: 0;
 	border: 0;
 	padding: 0;
 
-	> * {
-		.box-sizing(border-box);
-		.box-shadow(0 1px 5px rgba(0,0,0,0.25));
+	.box-sizing(border-box);
+
+	.box-shadow(0 1px 5px rgba(0,0,0,0.25));
+	.d-tooltip-dialog&, .d-date-picker& {
+		// Exception popups: do not use a shadow on these because they aren't rectangular,
+		// or the box shadow doesn't look right.
+		.box-shadow(none);
 	}
 }
 
-.d-tooltip-dialog-popup, .d-date-picker-popup {
-	// exception popups: do not use a shadow on these because they aren't rectangular,
-	// or the box shadow doesn't look right.
-	.box-shadow(none);
-}

@@ -153,13 +153,11 @@ define([
 					ddb.focus();
 					ddb.click();
 
-					// Check that old dropdown and wrapper were removed from doc.
+					// Check that old dropdown was was removed from doc.
 					setTimeout(dfd.callback(function () {
 						// Make sure that there's no DOM leak
-						var newNumWrappers = document.querySelectorAll(".d-popup").length,
-							newNumDropdowns = document.querySelectorAll("d-hasdropdown-menu").length;
+						var newNumDropdowns = document.querySelectorAll("d-hasdropdown-menu").length;
 
-						assert.strictEqual(newNumWrappers, origNumWrappers + 1, "wrapper leak");
 						assert.strictEqual(newNumDropdowns, origNumDropdowns + 1, "dropdown widget leak");
 					}, 10));
 				}, 10));
