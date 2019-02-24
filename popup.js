@@ -4,6 +4,7 @@
  */
 define([
 	"dcl/dcl",
+	"resize-observer-polyfill/dist/ResizeObserver",
 	"./BackgroundIframe",
 	"./DialogUnderlay",
 	"./features", // has("config-bgIframe")
@@ -13,6 +14,7 @@ define([
 	"./theme!" // d-popup class
 ], function (
 	dcl,
+	ResizeObserver,
 	BackgroundIframe,
 	DialogUnderlay,
 	has,
@@ -25,7 +27,7 @@ define([
 		return !(/^rtl$/i).test(doc.body.dir || doc.documentElement.dir);
 	}
 
-	// Mysterious code to workaround iOS problem where clicking a button  below an input will just keep the input
+	// Mysterious code to workaround iOS problem where clicking a button below an input will just keep the input
 	// focused.  Button gets pointerdown event but not click event.  Test case: popup.html, press "show centered dialog"
 	// and first click the <input>, then click the <button> below it.
 	document.addEventListener("pointerdown", function () {
@@ -442,12 +444,19 @@ define([
 				oldHeight = widget.offsetHeight,
 				oldWidth = widget.offsetWidth;
 
-			function resizeIfNecessary() {
+			var classChangeObserver = new MutationObserver(function () {
+				// If class has changed, then recompute maxHeight etc.
 				if (widget.className !== oldClassName) {
 					self._size(args);
 					oldClassName = widget.className;
 				}
-			}
+
+				// Ignore notifications due to what happened in this method.
+				classChangeObserver.takeRecords();
+			});
+			classChangeObserver.observe(widget, {
+				attributes: true
+			});
 
 			function repositionIfNecessary() {
 				var newHeight = widget.offsetHeight,
@@ -460,39 +469,18 @@ define([
 				}
 			}
 
-			var observer = new MutationObserver(function () {
-				// If class has changed, then recompute maxHeight etc.
-				resizeIfNecessary();
-
-				// Reposition immediately to avoid 50ms display of incorrectly positioned/sized popup.
+			var sizeChangeObserver = new ResizeObserver(function () {
 				repositionIfNecessary();
 
 				// Ignore notifications due to what happened in this method.
-				observer.takeRecords();
+				sizeChangeObserver.takeRecords();
 			});
-			observer.observe(widget, {
-				attributes: true,
-				characterData: true,
-				childList: true,
-				subtree: true
-			});
-
-			var resizeTimer;
-			function startRepositionPolling() {
-				resizeTimer = setTimeout(function () {
-					repositionIfNecessary();
-					startRepositionPolling();
-				}, 25);
-			}
-			startRepositionPolling();
+			sizeChangeObserver.observe(widget);
 
 			handlers.push({
 				remove: function () {
-					observer.disconnect();
-					if (resizeTimer) {
-						clearTimeout(resizeTimer);
-						resizeTimer = null;
-					}
+					classChangeObserver.disconnect();
+					sizeChangeObserver.disconnect();
 				}
 			});
 
