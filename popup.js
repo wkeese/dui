@@ -439,42 +439,36 @@ define([
 
 			// Handle size changes due to added/removed DOM or changed attributes,
 			// including changes that happen gradually due to animations.
-			var self = this,
-				oldClassName = widget.className,
-				oldHeight = widget.offsetHeight,
-				oldWidth = widget.offsetWidth;
-
+			var oldClassName = widget.className;
 			var classChangeObserver = new MutationObserver(function () {
 				// If class has changed, then recompute maxHeight etc.
 				if (widget.className !== oldClassName) {
-					self._size(args);
+					this._size(args);
 					oldClassName = widget.className;
 				}
 
 				// Ignore notifications due to what happened in this method.
 				classChangeObserver.takeRecords();
-			});
+			}.bind(this));
 			classChangeObserver.observe(widget, {
 				attributes: true
 			});
 
-			function repositionIfNecessary() {
+			var oldHeight = widget.offsetHeight,
+				oldWidth = widget.offsetWidth;
+			var sizeChangeObserver = new ResizeObserver(function () {
 				var newHeight = widget.offsetHeight,
 					newWidth = widget.offsetWidth;
 
 				if (newHeight !== oldHeight || newWidth !== oldWidth) {
 					oldHeight = newHeight;
 					oldWidth = newWidth;
-					self._repositionAll();
+					this._repositionAll();
 				}
-			}
-
-			var sizeChangeObserver = new ResizeObserver(function () {
-				repositionIfNecessary();
 
 				// Ignore notifications due to what happened in this method.
 				sizeChangeObserver.takeRecords();
-			});
+			}.bind(this));
 			sizeChangeObserver.observe(widget);
 
 			handlers.push({
