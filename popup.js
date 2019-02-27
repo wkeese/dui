@@ -465,9 +465,6 @@ define([
 					oldWidth = newWidth;
 					this._repositionAll();
 				}
-
-				// Ignore notifications due to what happened in this method.
-				sizeChangeObserver.takeRecords();
 			}.bind(this));
 			sizeChangeObserver.observe(widget);
 
