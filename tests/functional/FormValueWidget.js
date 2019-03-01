@@ -1,20 +1,17 @@
 define([
-	"require",
-	"intern",
-	"intern!object",
-	"intern/chai!assert",
-	"intern/dojo/node!leadfoot/keys",
-	"intern/dojo/node!leadfoot/helpers/pollUntil"
-], function (require, intern, registerSuite, assert, keys, pollUntil) {
+	"require"
+], function (
+	require
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
+	var pollUntil = require("@theintern/leadfoot/helpers/pollUntil").default;
 
-	registerSuite({
-		name: "FormValueWidget functional tests",
-
+	registerSuite("FormValueWidget functional tests", {
 		setup: function () {
 			return this.remote
-				.get(require.toUrl("./FormValueWidget.html"))
-				.then(pollUntil("return ready || null;", [],
-					intern.config.WAIT_TIMEOUT, intern.config.POLL_INTERVAL));
+				.get(require.toUrl("delite/tests/functional/FormValueWidget.html"))
+				.then(pollUntil("return ready || null;", [], intern.config.WAIT_TIMEOUT, intern.config.POLL_INTERVAL));
 		},
 
 		creation: function () {

@@ -1,17 +1,21 @@
 /* eslint-disable quote-props */
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"dcl/dcl",
 	"delite/register",
 	"delite/FormWidget",
 	"delite/Widget"
-], function (registerSuite, assert, dcl, register, FormWidget, Widget) {
+], function (
+	dcl,
+	register,
+	FormWidget,
+	Widget
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
+
 	var container, FormWidgetTest, FormWidgetTest2;
 
-	registerSuite({
-		name: "FormWidget",
-
+	registerSuite("FormWidget", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);

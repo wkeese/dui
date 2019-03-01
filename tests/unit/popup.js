@@ -1,17 +1,20 @@
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"delite/on",
 	"delite/popup",
 	"delite/register",
 	"delite/Widget"
-], function (registerSuite, assert, on, popup, register, Widget) {
+], function (
+	on,
+	popup,
+	register,
+	Widget
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
 
 	var myMenu, anchorNode;
 
-	registerSuite({
-		name: "popup",
-
+	registerSuite("popup", {
 		setup: function () {
 			var Menu = register("my-menu", [HTMLElement, Widget], {
 				render: function () {

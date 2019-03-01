@@ -1,14 +1,20 @@
 define([
 	"dcl/dcl",
-	"intern!object",
-	"intern/chai!assert",
 	"delite/register",
 	"delite/Widget",
 	"delite/Scrollable",
 	"./resources/ScrollableTestContainer",
 	"./resources/Scrollable-shared"
-], function (dcl, registerSuite, assert, register, Widget,
-	Scrollable, ScrollableTestContainer, ScrollableSharedTests) {
+], function (
+	dcl,
+	register,
+	Widget,
+	Scrollable,
+	ScrollableTestContainer,
+	ScrollableSharedTests
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
 
 	var container, MyScrollableWidget, MyScrollableTestContainer;
 	/*jshint multistr: true */
@@ -21,8 +27,7 @@ define([
 			<test-scrollable-container scrollDirection='none' id='sc2'> \
 			</test-scrollable-container>";
 
-	registerSuite({
-		name: "delite/Scrollable",
+	registerSuite("delite/Scrollable", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);
@@ -88,35 +93,23 @@ define([
 
 	// Markup use-case
 
-	var suite = {
-		name: "delite/Scrollable: ScrollableTestContainer in markup",
-		setup: function () {
+	registerSuite("delite/Scrollable: ScrollableTestContainer in markup", {
+		before: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);
 			container.innerHTML = html;
 			register("my-scrollable-test-container", [ScrollableTestContainer], {});
 			register.deliver();
 		},
-		teardown: function () {
+		after: function () {
 			container.parentNode.removeChild(container);
-		}
-	};
-
-	function mix(a, b) {
-		for (var n in b) {
-			a[n] = b[n];
-		}
-	}
-
-	mix(suite, ScrollableSharedTests.testCases);
-
-	registerSuite(suite);
+		},
+		tests: ScrollableSharedTests.testCases
+	});
 
 	// Programmatic creation
-
-	suite = {
-		name: "delite/Scrollable: ScrollableTestContainer programatically",
-		setup: function () {
+	registerSuite("delite/Scrollable: ScrollableTestContainer programatically", {
+		before: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);
 
@@ -141,12 +134,9 @@ define([
 			w.scrollDirection = "none";
 			w.placeAt(container);
 		},
-		teardown: function () {
+		after: function () {
 			container.parentNode.removeChild(container);
-		}
-	};
-
-	mix(suite, ScrollableSharedTests.testCases);
-
-	registerSuite(suite);
+		},
+		tests: ScrollableSharedTests.testCases
+	});
 });

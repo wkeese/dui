@@ -1,14 +1,16 @@
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"delite/register",
 	"delite/FormValueWidget"
-], function (registerSuite, assert, register, FormValueWidget) {
+], function (
+	register,
+	FormValueWidget
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
+
 	var container, FormValueWidgetTest, widget;
 
-	registerSuite({
-		name: "FormValueWidget",
-
+	registerSuite("FormValueWidget", {
 		setup: function () {
 			FormValueWidgetTest = register("form-value-widget-test", [HTMLElement, FormValueWidget], {
 				render: function () {
@@ -30,78 +32,80 @@ define([
 				}).placeAt(container);
 			},
 
-			handleOnInput: function () {
-				var d = this.async(3000);
+			tests: {
+				handleOnInput: function () {
+					var d = this.async(3000);
 
-				var log = [];
-				container.addEventListener("input", d.rejectOnError(function () {
-					log.push(widget.value);
-				}));
+					var log = [];
+					container.addEventListener("input", d.rejectOnError(function () {
+						log.push(widget.value);
+					}));
 
-				widget.value = "input value 0";
-				widget.emit("delite-activated");
-				widget.handleOnInput("input value 1");
-				widget.handleOnInput("input value 2");
-				widget.handleOnInput("input value 3");
+					widget.value = "input value 0";
+					widget.emit("delite-activated");
+					widget.handleOnInput("input value 1");
+					widget.handleOnInput("input value 2");
+					widget.handleOnInput("input value 3");
 
-				setTimeout(d.callback(function () {
-					// test debouncing; should only get one notification, about the latest value
-					assert.deepEqual(log, ["input value 3"]);
-				}), 100);
+					setTimeout(d.callback(function () {
+						// test debouncing; should only get one notification, about the latest value
+						assert.deepEqual(log, ["input value 3"]);
+					}), 100);
 
-				return d;
-			},
+					return d;
+				},
 
-			handleOnChange: function () {
-				var d = this.async(3000);
+				handleOnChange: function () {
+					var d = this.async(3000);
 
-				container.addEventListener("change", d.callback(function (e) {
-					assert.strictEqual(e.type, "change");
-				}));
+					container.addEventListener("change", d.callback(function (e) {
+						assert.strictEqual(e.type, "change");
+					}));
 
-				widget.value = "initial value";
-				widget.emit("delite-activated");
-				widget.handleOnChange("change value");
+					widget.value = "initial value";
+					widget.emit("delite-activated");
+					widget.handleOnChange("change value");
 
-				return d;
-			},
+					return d;
+				},
 
-			// Test corner case where user sets value to same thing it was originally, by dragging a slider
-			// handle but returning it to its original position before pointerup.
-			noChange: function () {
-				var d = this.async(3000);
-				container.addEventListener("change", d.rejectOnError(function () {
-					throw new Error("got change event");
-				}));
+				// Test corner case where user sets value to same thing it was originally, by dragging a slider
+				// handle but returning it to its original position before pointerup.
+				noChange: function () {
+					var d = this.async(3000);
+					container.addEventListener("change", d.rejectOnError(function () {
+						throw new Error("got change event");
+					}));
 
-				widget.value = "initial value";
-				widget.emit("delite-activated");
-				widget.handleOnChange("initial value");
+					widget.value = "initial value";
+					widget.emit("delite-activated");
+					widget.handleOnChange("initial value");
 
-				setTimeout(d.callback(function () {
-					// if this timeout fires without seeing any change event, we are good
-				}), 100);
+					setTimeout(d.callback(function () {
+						// if this timeout fires without seeing any change event, we are good
+					}), 100);
 
-				return d;
-			},
+					return d;
+				},
 
-			// Test corner case where user changes value but then changes it back before there's a notification.
-			changeThenRevert: function () {
-				var d = this.async(3000);
-				container.addEventListener("change", d.rejectOnError(function () {
-					throw new Error("got change event");
-				}));
+				// Test corner case where user changes value but then changes it back before there's a notification.
+				changeThenRevert: function () {
+					var d = this.async(3000);
+					container.addEventListener("change", d.rejectOnError(function () {
+						throw new Error("got change event");
+					}));
 
-				widget.value = "initial value";
-				widget.emit("delite-activated");
-				widget.handleOnChange("new value");
-				widget.handleOnChange("initial value");
+					widget.value = "initial value";
+					widget.emit("delite-activated");
+					widget.handleOnChange("new value");
+					widget.handleOnChange("initial value");
 
-				setTimeout(d.callback(function () {
-					// if this timeout fires without seeing any change event, we are good
-				}), 100);
+					setTimeout(d.callback(function () {
+						// if this timeout fires without seeing any change event, we are good
+					}), 100);
 
-				return d;
+					return d;
+				}
 			}
 		},
 

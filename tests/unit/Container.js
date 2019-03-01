@@ -1,6 +1,4 @@
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"dcl/dcl",
 	"delite/a11y",
 	"delite/handlebars",
@@ -8,8 +6,6 @@ define([
 	"delite/Widget",
 	"delite/Container"
 ], function (
-	registerSuite,
-	assert,
 	dcl,
 	a11y,
 	handlebars,
@@ -17,6 +13,9 @@ define([
 	Widget,
 	Container
 ) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
+
 	var container, PlainWidget, TestContainer, TestContained, html, zero, two, four;
 	/*jshint multistr: true */
 	html = "<label for='input'>before:</label><input id='input'/> \
@@ -40,9 +39,7 @@ define([
 		});
 	}
 
-	registerSuite({
-		name: "Container",
-
+	registerSuite("Container", {
 		setup: function () {
 			PlainWidget = register("plain-widget", [HTMLElement, Widget], {});
 			TestContainer = register("test-container", [HTMLElement, Widget, Container], {});

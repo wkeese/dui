@@ -1,13 +1,17 @@
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"delite/a11y",
 	"decor/sniff",
 	"requirejs-text/text!./resources/a11y.html"
-], function (registerSuite, assert, a11y, has, html) {
+], function (
+	a11y,
+	has,
+	html
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
+
 	var container;
-	registerSuite({
-		name: "a11y",
+	registerSuite("a11y", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);

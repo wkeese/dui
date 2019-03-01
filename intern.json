@@ -1,0 +1,140 @@
+{
+	"environments": [
+		{
+			"browserName": "chrome",
+			"chromeOptions": {
+				"args": ["headless", "disable-gpu"]
+			},
+			"fixSessionCapabilities": "no-detect"
+		}
+	],
+
+	"leaveRemoteOpen": false,
+
+	"basePath": "../",
+
+	"node": {
+		"loader": {
+			"script": "./intern-requirejs-loader.js",
+			"options": {
+				"baseUrl": "."
+			}
+		}
+	},
+
+	"browser": {
+		"loader": {
+			"script": "delite/intern-requirejs-loader.js",
+			"options": {
+				"baseUrl": "../../..",
+				"packages": [
+					{ "name": "intern", "location": "delite/node_modules/intern" }
+				]
+			}
+		}
+	},
+
+	"suites": [ "delite/tests/unit/all" ],
+	"functionalSuites": [ "tests/functional/all"],
+
+	"coverage": [
+		"**/*.js",
+		"!nls/**",
+		"!node_modules/**",
+		"!samples/**",
+		"!tests/**",
+		"!intern*",
+		"!Gruntfile.js"
+	],
+
+	"tunnelOptions": {
+		"drivers": [ "firefox", "internet explorer", "MicrosoftEdge" ]
+	},
+
+	"WAIT_TIMEOUT": 30000,
+	"POLL_INTERVAL": 500,
+
+	"configs": {
+		"local": {
+			"description": "Run tests on local system, automatically downloading and starting chromedriver."
+		},
+
+		"grid": {
+			"description": "Run tests against selenium grid, must specify serverUrl on command line",
+			"tunnel": "null",
+			"tunnelOptions": {
+				"hostname": "dslvm1484.mul.ie.ibm.com"
+			},
+			"environments": [
+				{ "browser": "chrome" }
+			]
+		},
+
+		"browserstack": {
+			"description": "Run tests on BrowserStack.",
+			"tunnel": "browserstack",
+			"maxConcurrency": 2,
+			"capabilities": {
+				"idle-timeout": 60,
+				"fixSessionCapabilities": "no-detect"
+			},
+			"environments": [
+				{ "browser": "internet explorer", "version": ["11"] },
+				{
+					"browser": "firefox",
+					"version": ["36", "latest"],
+					"platform": ["WINDOWS", "MAC"]
+				},
+				{
+					"browser": "chrome",
+					"version": ["38", "latest"],
+					"platform": ["WINDOWS", "MAC"]
+				},
+				{ "browser": "safari", "version": ["9", "10"] }
+			]
+		},
+
+		"browserstack-ie": {
+			"description": "Run IE tests on BrowserStack.",
+			"extends": ["browserstack"],
+			"environments": [
+				{ "browserName": "internet explorer", "version": "11", "name": "delite"}
+			]
+		},
+
+		"sauce": {
+			"description": "Run tests on SauceLabs.",
+			"environments": [
+				{ "browserName": "MicrosoftEdge", "version": "17",
+					"fixSessionCapabilities": false, "name": "delite"},
+				{ "browserName": "internet explorer", "version": "11",
+					"fixSessionCapabilities": "no-detect", "name": "delite" },
+				{ "browserName": "firefox", "version": "60", "platform": [ "Windows 10" ],
+					"fixSessionCapabilities": "no-detect","name": "delite" },
+				{ "browserName": "chrome", "version": "68", "platform": [ "Windows 10" ],
+					"fixSessionCapabilities": "no-detect", "name": "delite" },
+				{ "browserName": "safari", "version": "11",
+					"fixSessionCapabilities": "no-detect", "name": "delite" },
+				{ "browserName": "iphone", "platform": "OS X 10.10", "version": "10.2", "deviceName": "iPad Retina",
+					"fixSessionCapabilities": "no-detect", "name": "delite" },
+				{ "browserName": "android", "platform": "Linux", "version": "6.0", "deviceName": "Android Emulator",
+					"deviceType": "tablet", "fixSessionCapabilities": "no-detect", "name": "delite" }
+			],
+
+			"proxyPort": 9000,
+			"maxConcurrency": 5,
+			"coverage": false,
+			"tunnel": "saucelabs"
+		},
+
+		"sauce-ie": {
+			"description": "Run IE tests on SauceLabs.",
+			"extends": ["sauce"],
+			"environments": [
+				{ "browserName": "internet explorer", "version": "11", "fixSessionCapabilities": "no-detect",
+					"name": "delite" }
+			],
+			"coverage": null
+		}
+	}
+}

@@ -1,12 +1,19 @@
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"dcl/dcl",
 	"delite/register",
 	"delite/HasDropDown",
 	"delite/Widget",
 	"../functional/helpers"
-], function (registerSuite, assert, dcl, register, HasDropDown, Widget, helpers) {
+], function (
+	dcl,
+	register,
+	HasDropDown,
+	Widget,
+	helpers
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
+
 	var container;
 
 	// ------------
@@ -67,8 +74,7 @@ define([
 		}
 	});
 
-	registerSuite({
-		name: "HasDropDown",
+	registerSuite("HasDropDown", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);

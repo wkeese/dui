@@ -1,9 +1,12 @@
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"delite/place",
 	"delite/Viewport"
-], function (registerSuite, assert, place, Viewport) {
+], function (
+	place,
+	Viewport
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
 
 	var aroundTop,
 		aroundBottom,
@@ -28,9 +31,7 @@ define([
 		window.scrollTo(0, y);
 	}
 
-	registerSuite({
-		name: "place",
-
+	registerSuite("place", {
 		setup: function () {
 			popup = document.createElement("div");
 			popup.style.cssText = "position: absolute; width: 75px; background: blue; color: white;";

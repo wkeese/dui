@@ -1,6 +1,4 @@
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"dcl/dcl",
 	"dojo/_base/declare",
 	"delite/register",
@@ -8,14 +6,22 @@ define([
 	"delite/StoreMap",
 	"dstore/Trackable",
 	"dstore/Memory"
-], function (registerSuite, assert, dcl, declare, register, Widget, StoreMap, Trackable, Memory) {
+], function (
+	dcl,
+	declare,
+	register,
+	Widget,
+	StoreMap,
+	Trackable,
+	Memory
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
 
 	var container;
 	var M = declare([Memory, Trackable], {});
 
-	registerSuite({
-		name: "StoreMap",
-
+	registerSuite("StoreMap", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);

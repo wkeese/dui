@@ -1,17 +1,20 @@
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"delite/register",
 	"delite/KeyNav"
-], function (registerSuite, assert, register, KeyNav) {
+], function (
+	register,
+	KeyNav
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
+
 	var container;
 
 	var SimpleKeyNav = register("simple-key-nav", [HTMLElement, KeyNav], {
 		descendantSelector: ".child"
 	});
 
-	registerSuite({
-		name: "KeyNav",
+	registerSuite("KeyNav", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);

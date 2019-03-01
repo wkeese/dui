@@ -1,9 +1,12 @@
 define([
 	"require",
-	"requirejs-dplugins/Promise!",
-	"intern!object",
-	"intern/chai!assert"
-], function (localRequire, Promise, registerSuite, assert) {
+	"requirejs-dplugins/Promise!"
+], function (
+	localRequire,
+	Promise
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
 
 	function getStyles() {
 		// summary:
@@ -19,9 +22,7 @@ define([
 
 	var container;
 
-	registerSuite({
-		name: "theme",
-
+	registerSuite("theme", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);

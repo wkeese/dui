@@ -1,17 +1,16 @@
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"dcl/dcl",
 	"delite/register",
 	"delite/Widget",
 	"requirejs-domready/domReady!"
 ], function (
-	registerSuite,
-	assert,
 	dcl,
 	register,
 	Widget
 ) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
+
 	var container;
 
 	var SimpleWidget, TestDir, simple, pane1;
@@ -25,9 +24,7 @@ define([
 	}
 
 	// tabIndex is problematic, see https://github.com/ibm-js/delite/issues/34.
-	registerSuite({
-		name: "Widget",
-
+	registerSuite("Widget", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);

@@ -1,21 +1,19 @@
 define([
-	"require",
-	"intern",
-	"intern!object",
-	"intern/chai!assert",
-	"intern/dojo/node!leadfoot/helpers/pollUntil"
-], function (require, intern, registerSuite, assert, pollUntil) {
+	"require"
+], function (
+	require
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
+	var pollUntil = require("@theintern/leadfoot/helpers/pollUntil").default;
 
 	// Most of Widget's functionality is checked via the unit tests, but we have a functional test for checking
-	// that focusin/focusout event handlers works.
-	registerSuite({
-		name: "Widget functional tests",
-
+	// that focusin/focusout event handlers work.
+	registerSuite("Widget functional tests", {
 		setup: function () {
 			return this.remote
-				.get(require.toUrl("./Widget.html"))
-				.then(pollUntil("return ready || null;", [],
-					intern.config.WAIT_TIMEOUT, intern.config.POLL_INTERVAL));
+				.get(require.toUrl("delite/tests/functional/Widget.html"))
+				.then(pollUntil("return ready || null;", [], intern.config.WAIT_TIMEOUT, intern.config.POLL_INTERVAL));
 		},
 
 		on: {

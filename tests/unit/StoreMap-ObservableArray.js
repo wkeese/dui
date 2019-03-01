@@ -1,19 +1,24 @@
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"dcl/dcl",
 	"dojo/_base/declare",
 	"delite/register",
 	"delite/Widget",
 	"delite/StoreMap",
 	"decor/ObservableArray"
-], function (registerSuite, assert, dcl, declare, register, Widget, StoreMap, ObservableArray) {
+], function (
+	dcl,
+	declare,
+	register,
+	Widget,
+	StoreMap,
+	ObservableArray
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
 
 	var container;
 
-	registerSuite({
-		name: "StoreMap-ObservableArray",
-
+	registerSuite("StoreMap-ObservableArray", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);

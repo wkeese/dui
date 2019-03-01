@@ -59,17 +59,14 @@ module.exports = function (grunt) {
 		intern: {
 			local: {
 				options: {
-					runType: "runner",
-					config: "tests/intern.local",
-					reporters: ["Runner"]
-					//, leaveRemoteOpen: true	// uncomment for debugging
+					config: "@local",
+					reporters: "runner"
 				}
 			},
 			remote: {
 				options: {
-					runType: "runner",
-					config: "tests/intern",
-					reporters: ["Runner"]
+					config: "@sauce",
+					reporters: "runner"
 				}
 			}
 		},

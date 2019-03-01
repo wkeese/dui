@@ -1,20 +1,25 @@
 define([
 	"require",
-	"intern!object",
-	"intern/chai!assert",
 	"requirejs-dplugins/Promise!",
 	"delite/handlebars",
 	"delite/register",
 	"delite/Widget",
 	"delite/handlebars!./templates/HandlebarsButton.html",
 	"delite/theme!"		// to get CSS rules for d-hidden
-], function (require, registerSuite, assert, Promise, handlebars, register, Widget, buttonHBTmpl) {
+], function (
+	require,
+	Promise,
+	handlebars,
+	register,
+	Widget,
+	buttonHBTmpl
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
 
 	var container;
 
-	registerSuite({
-		name: "handlebars",
-
+	registerSuite("handlebars", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);

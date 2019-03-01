@@ -1,17 +1,17 @@
 define([
-	"require",
-	"intern",
-	"intern!object",
-	"intern/chai!assert",
-	"intern/dojo/node!leadfoot/helpers/pollUntil"
-], function (require, intern, registerSuite, assert, pollUntil) {
+	"require"
+], function (
+	require
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
+	var pollUntil = require("@theintern/leadfoot/helpers/pollUntil").default;
 
-	registerSuite({
-		name: "delite/dojo parser compatibility test",
+	registerSuite("delite/dojo parser compatibility test", {
 
 		"setup": function () {
 			return this.remote
-				.get(require.toUrl("./DojoParser.html"))
+				.get(require.toUrl("delite/tests/functional/DojoParser.html"))
 				.then(pollUntil("return (readyDijit && readyDelite) || null;", [],
 					intern.config.WAIT_TIMEOUT, intern.config.POLL_INTERVAL));
 		},

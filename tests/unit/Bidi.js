@@ -1,7 +1,5 @@
 
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"dcl/dcl",
 	"requirejs-dplugins/Promise!",
 	"delite/features",
@@ -9,7 +7,17 @@ define([
 	"delite/Widget",
 	"delite/Bidi",
 	"requirejs-domready/domReady!"
-], function (registerSuite, assert, dcl, Promise, has, register, Widget, Bidi) {
+], function (
+	dcl,
+	Promise,
+	has,
+	register,
+	Widget,
+	Bidi
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
+
 	var container, div, input, defaultDir;
 	var ltrText = "abc\u05d0\u05d1\u05d2";
 	var rtlText = "@#$123\u05d0\u05d1\u05d2abc";
@@ -17,9 +25,7 @@ define([
 	var wrappedWithUccText = "\u202b" + ltrText + "\u202c";
 	var SimpleWidget, widget;
 
-	registerSuite({
-		name: "Bidi",
-
+	registerSuite("Bidi", {
 		setup: function () {
 			has.add("inherited-dir", true, null, true);
 			defaultDir = document.body.dir || document.documentElement.dir || "ltr";

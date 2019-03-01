@@ -1,17 +1,22 @@
 define([
 	"require",
-	"intern!object",
-	"intern/chai!assert",
 	"requirejs-dplugins/Promise!",
 	"delite/DisplayContainer",
 	"delite/Widget",
 	"delite/register",
 	"requirejs-domready/domReady!"
-], function (require, registerSuite, assert, Promise, DisplayContainer, Widget, register) {
-	var container;
-	registerSuite({
-		name: "DisplayContainer",
+], function (
+	require,
+	Promise,
+	DisplayContainer,
+	Widget,
+	register
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
 
+	var container;
+	registerSuite("DisplayContainer", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);

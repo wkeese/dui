@@ -1,21 +1,24 @@
 define([
-	"intern!object",
-	"intern/chai!assert",
 	"dcl/dcl",
 	"decor/sniff",
 	"delite/register",
 	"decor/Stateful",
 	"requirejs-domready/domReady!"
-], function (registerSuite, assert, dcl, has, register, Stateful) {
+], function (
+	dcl,
+	has,
+	register,
+	Stateful
+) {
+	var registerSuite = intern.getPlugin("interface.object").registerSuite;
+	var assert = intern.getPlugin("chai").assert;
 
 	// The <div> node where we will put all our DOM nodes
 	var container;
 
 	var Mixin, TestWidget, TestExtendedWidget;
 
-	registerSuite({
-		name: "register",
-
+	registerSuite("register", {
 		setup: function () {
 			container = document.createElement("div");
 			document.body.appendChild(container);
