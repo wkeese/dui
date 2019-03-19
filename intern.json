@@ -54,6 +54,14 @@
 	"WAIT_TIMEOUT": 30000,
 	"POLL_INTERVAL": 500,
 
+	"defaultTimeout": 120000,
+	"functionalTimeouts": {
+		"connectTimeout": 60000,
+		"executeAsync": 30000,
+		"find": 10000,
+		"pageLoad": 60000
+	},
+
 	"configs": {
 		"local": {
 			"description": "Run tests on local system, automatically downloading and starting chromedriver."

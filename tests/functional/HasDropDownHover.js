@@ -105,6 +105,9 @@ define([
 
 				return this.remote
 					.findById("inputBeforeBehaviorButton").click().end()
+					.execute("return document.activeElement.id;").then(function (id) {
+						assert.strictEqual(id, "inputBeforeBehaviorButton", "focused on inputBeforeBehaviorButton");
+					})
 					.pressKeys(keys.TAB)
 					.execute("return document.activeElement.id;").then(function (id) {
 						assert.strictEqual(id, "behaviorButton", "tabbed to button");
