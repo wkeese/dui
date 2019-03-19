@@ -34,8 +34,46 @@
 		}
 	},
 
-	"suites": [ "delite/tests/unit/all" ],
-	"functionalSuites": [ "tests/functional/all"],
+	"suites": [
+		"delite/tests/unit/theme",
+		"delite/tests/unit/DisplayContainer",
+		"delite/tests/unit/register",
+		"delite/tests/unit/CustomElement",
+		"delite/tests/unit/Widget",
+		"delite/tests/unit/handlebars",
+		"delite/tests/unit/CssState",
+		"delite/tests/unit/Container",
+		"delite/tests/unit/a11y",
+		"delite/tests/unit/place",
+		"delite/tests/unit/popup",
+		"delite/tests/unit/uacss",
+		"delite/tests/unit/Selection",
+		"delite/tests/unit/StoreMap",
+		"delite/tests/unit/StoreMap-ObservableArray",
+		"delite/tests/unit/Store",
+		"delite/tests/unit/Store-ObservableArray",
+		"delite/tests/unit/Scrollable",
+		"delite/tests/unit/KeyNav",
+		"delite/tests/unit/FormWidget",
+		"delite/tests/unit/FormValueWidget",
+		"delite/tests/unit/Bidi",
+		"delite/tests/unit/HasDropDown"
+	],
+	
+	"functionalSuites": [
+		"./tests/functional/activationTracker",
+		"./tests/functional/Widget",
+		"./tests/functional/DialogUnderlay",
+		"./tests/functional/FormValueWidget",
+		"./tests/functional/HasDropDown",
+		"./tests/functional/HasDropDownHover",
+		"./tests/functional/TabIndex",
+		"./tests/functional/KeyNav",
+		"./tests/functional/on",
+		"./tests/functional/popup",
+		"./tests/functional/register",
+		"./tests/functional/DojoParser"
+	],
 
 	"coverage": [
 		"**/*.js",
