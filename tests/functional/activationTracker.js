@@ -9,7 +9,6 @@ define([
 	var pollUntil = require("@theintern/leadfoot/helpers/pollUntil").default;
 
 	registerSuite("activationTracker functional tests", {
-
 		before: function () {
 			return this.remote
 				.get(require.toUrl("delite/tests/functional/activationTracker.html"))
@@ -28,59 +27,59 @@ define([
 				var environmentType = this.remote.environmentType;
 
 				return this.remote
-					.findById("activeStackChangeNotifications").getProperty("value").then(function (changes) {
+					.execute("return document.getElementById('activeStackChanges').value;").then(function (changes) {
 						assert.strictEqual(changes, "0", "activeStack changes #0");
-					}).end()
+					})
 					.findById("first").click().end()
-					.findById("activeStackChangeNotifications").getProperty("value").then(function (changes) {
+					.execute("return document.getElementById('activeStackChanges').value;").then(function (changes) {
 						assert.strictEqual(changes, "1", "activeStack changes #1");
-					}).end()
-					.findById("activeStack").getProperty("value").then(function (activeStack) {
+					})
+					.execute("return document.getElementById('activeStack').value;").then(function (activeStack) {
 						assert.strictEqual(activeStack, "form, first", "activeStack #1");
-					}).end()
-					.findById("log").getProperty("value").then(function (log) {
+					})
+					.execute("return document.getElementById('log').value;").then(function (log) {
 						assert.strictEqual(log.trim(), "form activated", "log #1");
-					}).end()
+					})
 					.findById("second").click().end()	// focus another simple input
-					.findById("activeStackChangeNotifications").getProperty("value").then(function (changes) {
+					.execute("return document.getElementById('activeStackChanges').value;").then(function (changes) {
 						assert.strictEqual(changes, "2", "activeStack changes #2");
-					}).end()
-					.findById("activeStack").getProperty("value").then(function (activeStack) {
+					})
+					.execute("return document.getElementById('activeStack').value;").then(function (activeStack) {
 						assert.strictEqual(activeStack, "form, second", "activeStack #2");
-					}).end()
-					.findById("log").getProperty("value").then(function (log) {
+					})
+					.execute("return document.getElementById('log').value;").then(function (log) {
 						// Since the deliteful/Form widget didn't leave the focus chain it
 						// shouldn't have any more events besides the original.
 						assert.strictEqual(log.trim(), "form activated", "log #2");
-					}).end()
+					})
 					.findByCssSelector("#combobox input").click().end()	// focus combobox
-					.findById("activeStackChangeNotifications").getProperty("value").then(function (changes) {
+					.execute("return document.getElementById('activeStackChanges').value;").then(function (changes) {
 						assert.strictEqual(changes, "3", "activeStack changes #3");
-					}).end()
-					.findById("activeStack").getProperty("value").then(function (activeStack) {
+					})
+					.execute("return document.getElementById('activeStack').value;").then(function (activeStack) {
 						assert.strictEqual(activeStack, "form, fieldset1, combobox, input", "activeStack #3");
-					}).end()
-					.findById("log").getProperty("value").then(function (log) {
+					})
+					.execute("return document.getElementById('log').value;").then(function (log) {
 						assert.strictEqual(log.trim(),
 							"form activated\nfieldset1 activated\ncombobox activated", "log #3");
-					}).end()
+					})
 					.findByCssSelector("#combobox input").click().end()	// to check for dup notifications
-					.findById("activeStackChangeNotifications").getProperty("value").then(function (changes) {
+					.execute("return document.getElementById('activeStackChanges').value;").then(function (changes) {
 						assert.strictEqual(changes, "3", "activeStack changes #4");
-					}).end()
+					})
 					.findByCssSelector("#editor div").click().end()
-					.findById("activeStack").getProperty("value").then(function (activeStack) {
+					.execute("return document.getElementById('activeStack').value;").then(function (activeStack) {
 						assert.strictEqual(activeStack, "form, editor, div", "activeStack #4");
-					}).end()
-					.findById("log").getProperty("value").then(function (log) {
+					})
+					.execute("return document.getElementById('log').value;").then(function (log) {
 						assert.strictEqual(log.trim(), "form activated\nfieldset1 activated\ncombobox activated\n" +
 							"combobox deactivated\nfieldset1 deactivated\neditor activated", "log #4");
-					}).end()
+					})
 
 					// clicking spinner buttons should activate the spinner, even
 					// though there's no actual DOM focus event
 					.findByCssSelector("fake-spinner .button").click().end()
-					.findById("activeStack").getProperty("value").then(function (activeStack) {
+					.execute("return document.getElementById('activeStack').value;").then(function (activeStack) {
 						if (environmentType.brokenMouseEvents) {
 							// click() doesn't generate pointerdown event on IE10+ and neither does
 							// moveMouseTo().pressMouseButton(1).releaseMouseButton(1).
@@ -93,7 +92,7 @@ define([
 							return;
 						}
 						assert.strictEqual(activeStack, "form, fieldset2, spinner, span", "activeStack #5");
-					}).end();
+					});
 			},
 
 			keyboard: function () {
@@ -103,33 +102,33 @@ define([
 
 				return this.remote
 					.findById("first").click().end()
-					.findById("activeStack").getProperty("value").then(function (activeStack) {
+					.execute("return document.getElementById('activeStack').value;").then(function (activeStack) {
 						assert.strictEqual(activeStack, "form, first", "activeStack #1");
-					}).end()
-					.findById("log").getProperty("value").then(function (log) {
+					})
+					.execute("return document.getElementById('log').value;").then(function (log) {
 						assert.strictEqual(log.trim(), "form activated", "log #1");
-					}).end()
+					})
 					.pressKeys(keys.TAB)	// focus another simple input
-					.findById("activeStack").getProperty("value").then(function (activeStack) {
+					.execute("return document.getElementById('activeStack').value;").then(function (activeStack) {
 						assert.strictEqual(activeStack, "form, second", "activeStack #2");
-					}).end()
-					.findById("log").getProperty("value").then(function (log) {
+					})
+					.execute("return document.getElementById('log').value;").then(function (log) {
 						// Since the deliteful/Form widget didn't leave the focus chain it
 						// shouldn't have any more events besides the original.
 						assert.strictEqual(log.trim(), "form activated", "log #2");
-					}).end()
+					})
 					.pressKeys(keys.TAB)	// focus combobox
-					.findById("activeStack").getProperty("value").then(function (activeStack) {
+					.execute("return document.getElementById('activeStack').value;").then(function (activeStack) {
 						assert.strictEqual(activeStack, "form, fieldset1, combobox, input", "activeStack #3");
-					}).end()
-					.findById("log").getProperty("value").then(function (log) {
+					})
+					.execute("return document.getElementById('log').value;").then(function (log) {
 						assert.strictEqual(log.trim(),
 							"form activated\nfieldset1 activated\ncombobox activated", "log #3");
-					}).end()
+					})
 					.findById("combobox").click().end()	// focus combobox again to check for duplicate notifications
-					.findById("activeStackChangeNotifications").getProperty("value").then(function (changes) {
+					.execute("return document.getElementById('activeStackChanges').value;").then(function (changes) {
 						assert.strictEqual(changes, "3", "activeStack changes #1");
-					}).end();
+					});
 			},
 
 			dropdown: function () {
@@ -139,12 +138,12 @@ define([
 					.execute("document.getElementById('dropdownButton').scrollIntoView();")
 					.findById("dropdownButton").click().end()
 					.findByCssSelector("fake-popup")
-					.isDisplayed().then(function (visible) {
-						assert(visible, "popup visible");
-					})
-					.click()
-					.end()
-					.findById("activeStack").getProperty("value").then(function (activeStack) {
+						.isDisplayed().then(function (visible) {
+							assert(visible, "popup visible");
+						})
+						.click()
+						.end()
+					.execute("return document.getElementById('activeStack').value;").then(function (activeStack) {
 						if (environmentType.brokenMouseEvents) {
 							// click() doesn't generate pointerdown event on IE10+ and neither does
 							// moveMouseTo().pressMouseButton(1).releaseMouseButton(1).
@@ -157,7 +156,7 @@ define([
 							return;
 						}
 						assert.strictEqual(activeStack, "form, dropdownButton, popup", "activeStack #1");
-					}).end();
+					});
 			},
 
 			hover: function () {
@@ -223,22 +222,22 @@ define([
 				return this.remote
 				// Test that detaching active (and hovered) node removes it from the activeStack/hoverStack.
 					.findById("removeMe").click().end()
-					.findById("activeStack").getProperty("value").then(function (activeStack) {
+					.execute("return document.getElementById('activeStack').value;").then(function (activeStack) {
 						assert.strictEqual(activeStack, "grandparent, parent", "activeStack #1");
-					}).end()
-					.findById("hoverStack").getProperty("value").then(function (activeStack) {
+					})
+					.execute("return document.getElementById('hoverStack').value;").then(function (activeStack) {
 						assert.strictEqual(activeStack, "grandparent, parent", "hoverStack #1");
-					}).end()
+					})
 
 					// Test that detaching parent of active (and hovered) node
 					// removes it from the activeStack/hoverStack.
 					.findById("removeMyParent").click().end()
-					.findById("activeStack").getProperty("value").then(function (activeStack) {
+					.execute("return document.getElementById('activeStack').value;").then(function (activeStack) {
 						assert.strictEqual(activeStack, "grandparent", "activeStack #2");
-					}).end()
-					.findById("hoverStack").getProperty("value").then(function (hoverStack) {
+					})
+					.execute("return document.getElementById('hoverStack').value;").then(function (hoverStack) {
 						assert.strictEqual(hoverStack, "grandparent", "hoverStack #2");
-					}).end();
+					});
 			}
 		}
 	});
