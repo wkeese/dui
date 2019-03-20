@@ -42,4 +42,6 @@ $ http-server
 
 Then in browser, navigate to:
 
-http://localhost/delite/node_modules/intern/
+http://localhost:8080/delite/node_modules/intern/
+
+(Adjust port to whatever http-server started on.)
